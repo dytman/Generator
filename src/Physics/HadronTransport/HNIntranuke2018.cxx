@@ -50,6 +50,7 @@
 
 #include <cstdlib>
 #include <sstream>
+#include "Physics/HadronTransport/INukeHadroData2018.h"
 
 #include <TMath.h>
 
@@ -66,7 +67,8 @@
 #include "Physics/HadronTransport/Intranuke2018.h"
 #include "Physics/HadronTransport/HNIntranuke2018.h"
 #include "Physics/HadronTransport/INukeException.h"
-#include "Physics/HadronTransport/INukeHadroData2018.h"
+//#include "Physics/HadronTransport/INukeHadroData2018.h"
+#include "Physics/HadronTransport/INukeHadroData2019.h"
 #include "Physics/HadronTransport/INukeUtils2018.h"
 #include "Framework/Interaction/Interaction.h"
 #include "Framework/Messenger/Messenger.h"
@@ -229,8 +231,7 @@ INukeFateHN_t HNIntranuke2018::HadronFateHN(const GHepParticle * p) const
     // handle pions
     //
     if (pdgc==kPdgPiP || pdgc==kPdgPiM || pdgc==kPdgPi0) {
-
-       double frac_cex      = this->FateWeight(pdgc, kIHNFtCEx)
+      /*       double frac_cex      = this->FateWeight(pdgc, kIHNFtCEx)
 	                            * fHadroData2018->Frac(pdgc, kIHNFtCEx,     ke, fRemnA, fRemnZ);
        double frac_elas     = this->FateWeight(pdgc, kIHNFtElas)
 	                            * fHadroData2018->Frac(pdgc, kIHNFtElas,    ke, fRemnA, fRemnZ);
@@ -238,6 +239,15 @@ INukeFateHN_t HNIntranuke2018::HadronFateHN(const GHepParticle * p) const
 	                            * fHadroData2018->Frac(pdgc, kIHNFtInelas,  ke, fRemnA, fRemnZ);
        double frac_abs      = this->FateWeight(pdgc, kIHNFtAbs)
 	                            * fHadroData2018->Frac(pdgc, kIHNFtAbs,     ke, fRemnA, fRemnZ);
+				    */
+       double frac_cex      = this->FateWeight(pdgc, kIHNFtCEx)
+	                            * fHadroData2019->Frac(pdgc, kIHNFtCEx,     ke, fRemnA, fRemnZ);
+       double frac_elas     = this->FateWeight(pdgc, kIHNFtElas)
+	                            * fHadroData2019->Frac(pdgc, kIHNFtElas,    ke, fRemnA, fRemnZ);
+       double frac_inel     = this->FateWeight(pdgc, kIHNFtInelas)
+	                            * fHadroData2019->Frac(pdgc, kIHNFtInelas,  ke, fRemnA, fRemnZ);
+       double frac_abs      = this->FateWeight(pdgc, kIHNFtAbs)
+	                            * fHadroData2019->Frac(pdgc, kIHNFtAbs,     ke, fRemnA, fRemnZ);
 
        frac_cex     *= fNucCEXFac;    // scaling factors
        frac_abs     *= fNucAbsFac;
@@ -278,12 +288,19 @@ INukeFateHN_t HNIntranuke2018::HadronFateHN(const GHepParticle * p) const
     // handle nucleons
     else if (pdgc==kPdgProton || pdgc==kPdgNeutron) {
 
-      double frac_elas     = this->FateWeight(pdgc, kIHNFtElas)
+      /*      double frac_elas     = this->FateWeight(pdgc, kIHNFtElas)
 	                           * fHadroData2018->Frac(pdgc, kIHNFtElas,   ke, fRemnA, fRemnZ);
       double frac_inel     = this->FateWeight(pdgc, kIHNFtInelas)
 	                           * fHadroData2018->Frac(pdgc, kIHNFtInelas, ke, fRemnA, fRemnZ);
       double frac_cmp      = this->FateWeight(pdgc, kIHNFtCmp)
 	                           * fHadroData2018->Frac(pdgc, kIHNFtCmp,    ke, fRemnA , fRemnZ);
+				   */
+      double frac_elas     = this->FateWeight(pdgc, kIHNFtElas)
+	                           * fHadroData2019->Frac(pdgc, kIHNFtElas,   ke, fRemnA, fRemnZ);
+      double frac_inel     = this->FateWeight(pdgc, kIHNFtInelas)
+	                           * fHadroData2019->Frac(pdgc, kIHNFtInelas, ke, fRemnA, fRemnZ);
+      double frac_cmp      = this->FateWeight(pdgc, kIHNFtCmp)
+	                           * fHadroData2019->Frac(pdgc, kIHNFtCmp,    ke, fRemnA , fRemnZ);
 
       LOG("HNIntranuke2018", pINFO) 
 	<< "\n frac{" << INukeHadroFates::AsString(kIHNFtElas)    << "} = " << frac_elas
@@ -316,10 +333,15 @@ INukeFateHN_t HNIntranuke2018::HadronFateHN(const GHepParticle * p) const
     else if (pdgc==kPdgGamma)  return kIHNFtInelas;
     // Handle kaon -- elastic + charge exchange
     else if (pdgc==kPdgKP){
-       double frac_cex      = this->FateWeight(pdgc, kIHNFtCEx)
+      /*       double frac_cex      = this->FateWeight(pdgc, kIHNFtCEx)
 	                            * fHadroData2018->Frac(pdgc, kIHNFtCEx,     ke, fRemnA, fRemnZ);
        double frac_elas     = this->FateWeight(pdgc, kIHNFtElas)
 	                            * fHadroData2018->Frac(pdgc, kIHNFtElas,    ke, fRemnA, fRemnZ);
+				    */
+       double frac_cex      = this->FateWeight(pdgc, kIHNFtCEx)
+	                            * fHadroData2019->Frac(pdgc, kIHNFtCEx,     ke, fRemnA, fRemnZ);
+       double frac_elas     = this->FateWeight(pdgc, kIHNFtElas)
+	                            * fHadroData2019->Frac(pdgc, kIHNFtElas,    ke, fRemnA, fRemnZ);
 
        //       frac_cex     *= fNucCEXFac;    // scaling factors
        //       frac_elas    *= fNucQEFac;   // Flor - Correct scaling factors?
@@ -507,7 +529,8 @@ void HNIntranuke2018::AbsorbHN(
 
   // adjust p to reflect scattering
   // get random scattering angle
-  C3CM = fHadroData2018->IntBounce(p,t1code,scode,fate);
+  //  C3CM = fHadroData2018->IntBounce(p,t1code,scode,fate);
+  C3CM = fHadroData2019->IntBounce(p,t1code,scode,fate);
     if (C3CM<-1.) 
     {
       p->SetStatus(kIStStableFinalState);
@@ -707,7 +730,8 @@ void HNIntranuke2018::ElasHN(
     }
 
   // get random scattering angle
-  double C3CM = fHadroData2018->IntBounce(p,tcode,scode,fate);
+  //  double C3CM = fHadroData2018->IntBounce(p,tcode,scode,fate);
+  double C3CM = fHadroData2019->IntBounce(p,tcode,scode,fate);
   if (C3CM<-1.) 
     {
       p->SetStatus(kIStStableFinalState);
@@ -829,14 +853,20 @@ void HNIntranuke2018::GammaInelasticHN(GHepRecord* ev, GHepParticle* p, INukeFat
     << "Particle code: " << pcode << ", target: " << tcode;
 
 
-  if (rnd->RndFsi().Rndm() * (fHadroData2018 -> XSecGamp_fs() -> Evaluate(ke) +
-			      fHadroData2018 -> XSecGamn_fs() -> Evaluate(ke)  )
-      <= fHadroData2018 -> XSecGamp_fs() -> Evaluate(ke) ) { scode = kPdgProton;  }
+  //  if (rnd->RndFsi().Rndm() * (fHadroData2018 -> XSecGamp_fs() -> Evaluate(ke) +
+  //			      fHadroData2018 -> XSecGamn_fs() -> Evaluate(ke)  )
+//      <= fHadroData2018 -> XSecGamp_fs() -> Evaluate(ke) ) { scode = kPdgProton;  }
+
+  if (rnd->RndFsi().Rndm() * (fHadroData2019 -> XSecGamp_fs() -> Evaluate(ke) +
+			      fHadroData2019 -> XSecGamn_fs() -> Evaluate(ke)  )
+      <= fHadroData2019 -> XSecGamp_fs() -> Evaluate(ke) ) { scode = kPdgProton;  }
+
   else                                                 { scode = kPdgNeutron; }
 
   //scode=fHadroData2018->AngleAndProduct(p,tcode,C3CM,fate);
   //double C3CM = 0.0; // cos of scattering angle
-  double C3CM = fHadroData2018->IntBounce(p,tcode,scode,fate);
+  //  double C3CM = fHadroData2018->IntBounce(p,tcode,scode,fate);
+  double C3CM = fHadroData2019->IntBounce(p,tcode,scode,fate);
 
   if      ((tcode == kPdgProton ) && (scode==kPdgProton )) {s2code=kPdgPi0;}
   else if ((tcode == kPdgProton ) && (scode==kPdgNeutron)) {s2code=kPdgPiP;}
@@ -951,7 +981,8 @@ bool HNIntranuke2018::HandleCompoundNucleusHN(GHepRecord* ev, GHepParticle* p) c
 void HNIntranuke2018::LoadConfig(void)
 {
   // load hadronic cross sections
-  fHadroData2018 = INukeHadroData2018::Instance();
+  //  fHadroData2018 = INukeHadroData2018::Instance();
+  fHadroData2019 = INukeHadroData2019::Instance();
 
   // fermi momentum setup
   // this is specifically set in Intranuke2018::Configure(string)
