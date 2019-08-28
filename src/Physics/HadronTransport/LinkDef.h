@@ -8,7 +8,8 @@
 #pragma link C++ namespace genie::utils::intranuke;
 
 #pragma link C++ class genie::INukeHadroData;
-#pragma link C++ class genie::INukeHadroData2018;
+//#pragma link C++ class genie::INukeHadroData2018;
+#pragma link C++ class genie::INukeHadroData2019;
 #pragma link C++ class genie::INukeDeltaPropg;
 //#pragma link C++ class genie::INukePhotoPropg;
 
