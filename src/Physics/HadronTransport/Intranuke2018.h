@@ -46,7 +46,8 @@ class TVector3;
 namespace genie {
 
 class GHepParticle;
-class INukeHadroData2018;
+//class INukeHadroData2018;
+class INukeHadroData2019;
 class PDGCodeList;
 class HNIntranuke2018;
 class HAIntranuke2018;
@@ -93,7 +94,8 @@ protected:
   // utility objects & params
   mutable double         fTrackingRadius;///< tracking radius for the nucleus in the current event
   mutable TGenPhaseSpace fGenPhaseSpace; ///< a phase space generator
-  INukeHadroData2018 *       fHadroData2018;     ///< a collection of h+N,h+A data & calculations
+  //  INukeHadroData2018 *       fHadroData2018;     ///< a collection of h+N,h+A data & calculations
+  INukeHadroData2019 *       fHadroData2019;     ///< a collection of h+N,h+A data & calculations
   AlgFactory *           fAlgf;          ///< algorithm factory instance
   const NuclearModelI *  fNuclmodel;     ///< nuclear model used to generate fermi momentum
   mutable int            fRemnA;         ///< remnant nucleus A
