@@ -40,7 +40,7 @@ XsecNNCorr          bool    Yes   nuclear medium correction for NN cross section
 	  <param type="alg"    name="NuclearModel"> genie::FGMBodekRitchie/Default </param>
     -->
 
-    <param type="alg"    name="Dataset">   genie::INukeHadroData2019/Historical  </param>
+    <param type="alg"    name="INukeDataset">   genie::INukeHadroData2019/Historical  </param>
 
 
     <param type="bool" name="HNINUKE-UseOset"> true  </param>

@@ -1542,7 +1542,7 @@ void HAIntranuke2018::LoadConfig(void)
 
   // load hadronic cross sections
   //  fHadroData2018 = INukeHadroData2018::Instance();
-  fHadroData2019 =  dynamic_cast<const INukeHadroData2019 *>( this -> SubAlg("Dataset") ) ;
+  fHadroData2019 =  dynamic_cast<const INukeHadroData2019 *>( this -> SubAlg("INukeDataset") ) ;
 
   // fermi momentum setup
   // this is specifically set in Intranuke2018::Configure(string)
