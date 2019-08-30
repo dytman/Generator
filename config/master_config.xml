@@ -51,6 +51,9 @@
    <config alg="genie::NucleonDecayPrimaryVtxGenerator"> NucleonDecayPrimaryVtxGenerator.xml </config>
    <config alg="genie::NNBarOscPrimaryVtxGenerator">     NNBarOscPrimaryVtxGenerator.xml     </config>
 
+   <!-- ****** CONFIGURATION FOR ALGORITHMS FOR CROSS SECTION DATASETS ****** -->
+   <config alg="genie::INukeHadroData2019">    INukeHadroData2019.xml     </config>
+
    <!-- ****** CONFIGURATION FOR LIST-GENERATORS ****** -->
    <config alg="genie::QELInteractionListGenerator">           QELInteractionListGenerator.xml       </config>
    <config alg="genie::RSPPInteractionListGenerator">          RSPPInteractionListGenerator.xml      </config>

@@ -1,37 +1,37 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2019, The GENIE Collaboration
- For the full text of the license visit http://copyright.genie-mc.org
- or see $GENIE/LICENSE
+  Copyright (c) 2003-2019, The GENIE Collaboration
+  For the full text of the license visit http://copyright.genie-mc.org
+  or see $GENIE/LICENSE
 
- Author: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>, Rutherford Lab.
-         Steve Dytman <dytman+@pitt.edu>, Pittsburgh Univ.
-	 Aaron Meyer <asm58@pitt.edu>, Pittsburgh Univ.
-	 Alex Bell, Pittsburgh Univ.
-         February 01, 2007
+  Author: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>, Rutherford Lab.
+  Steve Dytman <dytman+@pitt.edu>, Pittsburgh Univ.
+  Aaron Meyer <asm58@pitt.edu>, Pittsburgh Univ.
+  Alex Bell, Pittsburgh Univ.
+  February 01, 2007
 
- For the class documentation see the corresponding header file.
+  For the class documentation see the corresponding header file.
 
- Important revisions after version 2.0.0 :
- @ Dec 06, 2008 - CA
-   Tweak dtor so as not to clutter the output if GENIE exits in err so as to
-   spot the fatal mesg immediately.
- @ Jul 15, 2010 - AM
-   MeanFreePath now distinguishes between protons and neutrons. To account for
-   this, additional splines were added for each nucleon. Absorption fates
-   condensed into a single fate, splines updated accordingly. Added gamma and kaon
-   splines.Outdated splines were removed. Function IntBounce implemented to calculate
-   a CM scattering angle for given probe, target, product, and fate. AngleAndProduct
-   similar to IntBounce, but also determines the target nucleon.
- @ May 01, 2012 - CA
-   Pick data from $GENIE/data/evgen/intranuke/
- @ Jan 9, 2015 - SD, Nick Geary, Tomek Golan
-   Added 2014 version of INTRANUKE codes for independent development.
- @ Oct, 2015 - TG
-   Added 2015 version of INTRANUKE codes for independent development.
-   Include Oset data files.
- @ Apr, 2016 - Flor Blasczyk
-   Added K+ cex data files
+  Important revisions after version 2.0.0 :
+  @ Dec 06, 2008 - CA
+  Tweak dtor so as not to clutter the output if GENIE exits in err so as to
+  spot the fatal mesg immediately.
+  @ Jul 15, 2010 - AM
+  MeanFreePath now distinguishes between protons and neutrons. To account for
+  this, additional splines were added for each nucleon. Absorption fates
+  condensed into a single fate, splines updated accordingly. Added gamma and kaon
+  splines.Outdated splines were removed. Function IntBounce implemented to calculate
+  a CM scattering angle for given probe, target, product, and fate. AngleAndProduct
+  similar to IntBounce, but also determines the target nucleon.
+  @ May 01, 2012 - CA
+  Pick data from $GENIE/data/evgen/intranuke/
+  @ Jan 9, 2015 - SD, Nick Geary, Tomek Golan
+  Added 2014 version of INTRANUKE codes for independent development.
+  @ Oct, 2015 - TG
+  Added 2015 version of INTRANUKE codes for independent development.
+  Include Oset data files.
+  @ Apr, 2016 - Flor Blasczyk
+  Added K+ cex data files
 */
 //____________________________________________________________________________
 
@@ -61,17 +61,14 @@ using namespace genie;
 using namespace genie::constants;
 
 //____________________________________________________________________________
-INukeHadroData2019 * INukeHadroData2019::fInstance = 0;
-//____________________________________________________________________________
 double INukeHadroData2019::fMinKinEnergy   =    1.0; // MeV
 double INukeHadroData2019::fMaxKinEnergyHA =  999.0; // MeV
 double INukeHadroData2019::fMaxKinEnergyHN = 1799.0; // MeV
 //____________________________________________________________________________
-INukeHadroData2019::INukeHadroData2019()
-{
-  this->LoadCrossSections();
-  fInstance = 0;
-}
+INukeHadroData2019::INukeHadroData2019() : Algorithm( "INukeHadroData2019") , 
+					   fIsConfigured( false ) 
+{ ; } 
+
 //____________________________________________________________________________
 INukeHadroData2019::~INukeHadroData2019()
 {
@@ -156,10 +153,10 @@ INukeHadroData2019::~INukeHadroData2019()
   delete fhN2dXSecGamPimP_Inelas;
   delete fhN2dXSecKpN_CEx;
   
-//  delete TPipA_Tot; 
+  //  delete TPipA_Tot; 
   delete TfracPipA_Abs;
   delete TfracPipA_CEx;
-//  delete TfracPipA_Elas;
+  //  delete TfracPipA_Elas;
   delete TfracPipA_Inelas;
   delete TfracPipA_PiPro;
   
@@ -172,47 +169,42 @@ INukeHadroData2019::~INukeHadroData2019()
   
 }
 //____________________________________________________________________________
-INukeHadroData2019 * INukeHadroData2019::Instance()
-{
-  if(fInstance == 0) {
-    LOG("INukeData", pINFO) << "INukeHadroData2019 late initialization";
-    static INukeHadroData2019::Cleaner cleaner;
-    cleaner.DummyMethodAndSilentCompiler();
-    fInstance = new INukeHadroData2019;
-  }
-  return fInstance;
-}
-//____________________________________________________________________________
 void INukeHadroData2019::LoadCrossSections(void)
 {
-// Loads hadronic x-section data
+  // Loads hadronic x-section data
 
   //-- Get the top-level directory with input hadron cross-section data
   //   (search for $GINUKEHADRONDATA or use default location)
   string data_dir = (gSystem->Getenv("GINUKEHADRONDATA")) ?
-             string(gSystem->Getenv("GINUKEHADRONDATA")) :
-             string(gSystem->Getenv("GENIE")) + string("/data/evgen/intranuke/historical");
-
+    string(gSystem->Getenv("GINUKEHADRONDATA")) :
+    string(gSystem->Getenv("GENIE")) + string("/data/evgen/intranuke/");
+  
   LOG("INukeData", pINFO)
-      << "Loading INTRANUKE hadron data from: " << data_dir;
+    << "Loading INTRANUKE hadron data from: " << data_dir;
 
   //-- Build filenames
 
-  /*  string datafile_NN   = data_dir + "/tot_xsec/historical/intranuke-xsections-NN2014.dat";
-  string datafile_pipN = data_dir + "/tot_xsec/historical/intranuke-xsections-pi+N.dat";
-  string datafile_pi0N = data_dir + "/tot_xsec/historical/intranuke-xsections-pi0N.dat";
-  string datafile_NA   = data_dir + "/tot_xsec/historical/intranuke-fractions-NA2016.dat";
-  string datafile_KA   = data_dir + "/tot_xsec/historical/intranuke-fractions-KA.dat";
-  string datafile_gamN = data_dir + "/tot_xsec/historical/intranuke-xsections-gamN.dat";
-  string datafile_kN   = data_dir + "/tot_xsec/historical/intranuke-xsections-kaonN2018.dat";
-  */
-  string datafile_NN   = data_dir + "/tot_xsec/2019/intranuke-xsections-NN2014.dat";
-  string datafile_pipN = data_dir + "/tot_xsec/2019/intranuke-xsections-pi+N.dat";
-  string datafile_pi0N = data_dir + "/tot_xsec/2019/intranuke-xsections-pi0N.dat";
-  string datafile_NA   = data_dir + "/tot_xsec/2019/intranuke-fractions-NA2016.dat";
-  string datafile_KA   = data_dir + "/tot_xsec/2019/intranuke-fractions-KA.dat";
-  string datafile_gamN = data_dir + "/tot_xsec/2019/intranuke-xsections-gamN.dat";
-  string datafile_kN   = data_dir + "/tot_xsec/2019/intranuke-xsections-kaonN2018.dat";
+  string temp ;
+  GetParam( "datafile_NN", temp ) ;
+  string datafile_NN   = data_dir + temp ; 
+
+  GetParam( "datafile_pipN", temp ) ;
+  string datafile_pipN = data_dir + temp ; 
+
+  GetParam( "datafile_pi0N", temp ) ;
+  string datafile_pi0N = data_dir + temp ; 
+
+  GetParam( "datafile_NA", temp ) ;
+  string datafile_NA   = data_dir + temp ; 
+
+  GetParam( "datafile_KA", temp ) ;
+  string datafile_KA   = data_dir + temp ; 
+
+  GetParam( "datafile_gamN", temp ) ;
+  string datafile_gamN = data_dir + temp ; 
+
+  GetParam( "datafile_kN", temp ) ;
+  string datafile_kN   = data_dir + temp ; 
 
   //-- Make sure that all data files are available
 
@@ -238,19 +230,19 @@ void INukeHadroData2019::LoadCrossSections(void)
 
   data_NN.ReadFile(datafile_NN.c_str(),"ke/D:pp_tot/D:pp_elas/D:pp_reac/D:pn_tot/D:pn_elas/D:pn_reac/D:nn_tot/D:nn_elas/D:nn_reac/D:pp_cmp/D:pn_cmp/D:nn_cmp/D");
   data_pipN.ReadFile(datafile_pipN.c_str(),
-     "ke/D:pipn_tot/D:pipn_cex/D:pipn_elas/D:pipn_reac/D:pipp_tot/D:pipp_cex/D:pipp_elas/D:pipp_reac/D:pipd_abs");
+		     "ke/D:pipn_tot/D:pipn_cex/D:pipn_elas/D:pipn_reac/D:pipp_tot/D:pipp_cex/D:pipp_elas/D:pipp_reac/D:pipd_abs");
   data_pi0N.ReadFile(datafile_pi0N.c_str(),
-     "ke/D:pi0n_tot/D:pi0n_cex/D:pi0n_elas/D:pi0n_reac/D:pi0p_tot/D:pi0p_cex/D:pi0p_elas/D:pi0p_reac/D:pi0d_abs");
+		     "ke/D:pi0n_tot/D:pi0n_cex/D:pi0n_elas/D:pi0n_reac/D:pi0p_tot/D:pi0p_cex/D:pi0p_elas/D:pi0p_reac/D:pi0d_abs");
   //data_NA.ReadFile(datafile_NA.c_str(),
   //"ke/D:pA_tot/D:pA_elas/D:pA_inel/D:pA_cex/D:pA_abs/D:pA_pipro/D");  // add support for cmp here (?)
   data_NA.ReadFile(datafile_NA.c_str(),
 		   "ke/D:pA_tot/D:pA_inel/D:pA_cex/D:pA_abs/D:pA_pipro/D:pA_cmp/D");  // add support for cmp here (?)
   data_gamN.ReadFile(datafile_gamN.c_str(),
-    "ke/D:pi0p_tot/D:pipn_tot/D:pimp_tot/D:pi0n_tot/D:gamp_fs/D:gamn_fs/D:gamN_tot/D");
+		     "ke/D:pi0p_tot/D:pipn_tot/D:pimp_tot/D:pi0n_tot/D:gamp_fs/D:gamn_fs/D:gamN_tot/D");
   data_kN.ReadFile(datafile_kN.c_str(),
 		   "ke/D:kpp_elas/D:kpn_elas/D:kpn_cex/D:kp_abs/D:kpN_tot/D");
   data_KA.ReadFile(datafile_KA.c_str(),
-     "ke/D:KA_tot/D:KA_elas/D:KA_inel/D:KA_abs/D");
+		   "ke/D:KA_tot/D:KA_elas/D:KA_inel/D:KA_abs/D");
 
   LOG("INukeData", pDEBUG)  << "Number of data rows in NN : "   << data_NN.GetEntries();
   LOG("INukeData", pDEBUG)  << "Number of data rows in pipN : " << data_pipN.GetEntries();
@@ -300,7 +292,7 @@ void INukeHadroData2019::LoadCrossSections(void)
   fXSecPi0p_Reac    = new Spline(&data_pi0N, "ke:pi0p_reac");
   fXSecPi0d_Abs     = new Spline(&data_pi0N, "ke:pi0d_abs");
 
-   // K+N x-section splines
+  // K+N x-section splines
   fXSecKpn_Elas   = new Spline(&data_kN,  "ke:kpn_elas");
   fXSecKpp_Elas   = new Spline(&data_kN,  "ke:kpp_elas");
   fXSecKpn_CEx    = new Spline(&data_kN,  "ke:kpn_cex");
@@ -366,8 +358,8 @@ void INukeHadroData2019::LoadCrossSections(void)
     const int hN_ppelas_npoints = hN_ppelas_points_per_file * hN_ppelas_nfiles;
 
     double hN_ppelas_energies[hN_ppelas_nfiles] = {
-        50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
-       550, 600, 650, 700, 750, 800, 850, 900, 950, 1000
+      50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
+      550, 600, 650, 700, 750, 800, 850, 900, 950, 1000
     };
 
     double hN_ppelas_costh [hN_ppelas_points_per_file];
@@ -376,18 +368,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_ppelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_ppelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/pp/pp" << ke << ".txt";
-     // read data
-     ReadhNFile(
-		hN_datafile.str(), ke, hN_ppelas_points_per_file,
-		ipoint, hN_ppelas_costh, hN_ppelas_xsec,2);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_ppelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/pp/pp" << ke << ".txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_ppelas_points_per_file,
+		 ipoint, hN_ppelas_costh, hN_ppelas_xsec,2);
     }//loop over files
 
     fhN2dXSecPP_Elas = new BLI2DNonUnifGrid(hN_ppelas_nfiles,hN_ppelas_points_per_file,
-			   hN_ppelas_energies,hN_ppelas_costh,hN_ppelas_xsec);
+					    hN_ppelas_energies,hN_ppelas_costh,hN_ppelas_xsec);
   }
 
   // kIHNFtElas, pn&np :
@@ -397,8 +389,8 @@ void INukeHadroData2019::LoadCrossSections(void)
     const int hN_npelas_npoints = hN_npelas_points_per_file * hN_npelas_nfiles;
 
     double hN_npelas_energies[hN_npelas_nfiles] = {
-        50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
-       550, 600, 650, 700, 750, 800, 850, 900, 950, 1000
+      50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
+      550, 600, 650, 700, 750, 800, 850, 900, 950, 1000
     };
 
     double hN_npelas_costh [hN_npelas_points_per_file];
@@ -407,18 +399,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_npelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_npelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/pn/pn" << ke << ".txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_npelas_points_per_file,
-       ipoint, hN_npelas_costh, hN_npelas_xsec,2);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_npelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/pn/pn" << ke << ".txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_npelas_points_per_file,
+		 ipoint, hN_npelas_costh, hN_npelas_xsec,2);
     }//loop over files
 
     fhN2dXSecNP_Elas = new BLI2DNonUnifGrid(hN_npelas_nfiles,hN_npelas_points_per_file,
-			   hN_npelas_energies,hN_npelas_costh,hN_npelas_xsec);
+					    hN_npelas_energies,hN_npelas_costh,hN_npelas_xsec);
   }
 
   // kIHNFtElas, pipN :
@@ -429,12 +421,12 @@ void INukeHadroData2019::LoadCrossSections(void)
 
     double hN_pipNelas_energies[hN_pipNelas_nfiles] = {
       10,  20,  30,  40,  50,  60,  70,  80,  90,
-     100, 110, 120, 130, 140, 150, 160, 170, 180, 190,
-     200, 210, 220, 230, 240, 250, 260, 270, 280, 290,
-     300, 340, 380, 420, 460, 500, 540, 580, 620, 660,
-     700, 740, 780, 820, 860, 900, 940, 980,
-     1020, 1060, 1100, 1140, 1180, 1220, 1260,
-     1300, 1340, 1380, 1420, 1460, 1500
+      100, 110, 120, 130, 140, 150, 160, 170, 180, 190,
+      200, 210, 220, 230, 240, 250, 260, 270, 280, 290,
+      300, 340, 380, 420, 460, 500, 540, 580, 620, 660,
+      700, 740, 780, 820, 860, 900, 940, 980,
+      1020, 1060, 1100, 1140, 1180, 1220, 1260,
+      1300, 1340, 1380, 1420, 1460, 1500
     };
 
     double hN_pipNelas_costh [hN_pipNelas_points_per_file];
@@ -443,18 +435,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_pipNelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_pipNelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/pip/pip" << ke << ".txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_pipNelas_points_per_file,
-       ipoint, hN_pipNelas_costh, hN_pipNelas_xsec,2);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_pipNelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/pip/pip" << ke << ".txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_pipNelas_points_per_file,
+		 ipoint, hN_pipNelas_costh, hN_pipNelas_xsec,2);
     }//loop over files
 
     fhN2dXSecPipN_Elas = new BLI2DNonUnifGrid(hN_pipNelas_nfiles,hN_pipNelas_points_per_file,
-			   hN_pipNelas_energies,hN_pipNelas_costh,hN_pipNelas_xsec);
+					      hN_pipNelas_energies,hN_pipNelas_costh,hN_pipNelas_xsec);
   }
 
   // kIHNFtElas, pi0N :
@@ -465,12 +457,12 @@ void INukeHadroData2019::LoadCrossSections(void)
 
     double hN_pi0Nelas_energies[hN_pi0Nelas_nfiles] = {
       10,  20,  30,  40,  50,  60,  70,  80,  90,
-     100, 110, 120, 130, 140, 150, 160, 170, 180, 190,
-     200, 210, 220, 230, 240, 250, 260, 270, 280, 290,
-     300, 340, 380, 420, 460, 500, 540, 580, 620, 660,
-     700, 740, 780, 820, 860, 900, 940, 980,
-     1020, 1060, 1100, 1140, 1180, 1220, 1260,
-     1300, 1340, 1380, 1420, 1460, 1500
+      100, 110, 120, 130, 140, 150, 160, 170, 180, 190,
+      200, 210, 220, 230, 240, 250, 260, 270, 280, 290,
+      300, 340, 380, 420, 460, 500, 540, 580, 620, 660,
+      700, 740, 780, 820, 860, 900, 940, 980,
+      1020, 1060, 1100, 1140, 1180, 1220, 1260,
+      1300, 1340, 1380, 1420, 1460, 1500
     };
 
     double hN_pi0Nelas_costh [hN_pi0Nelas_points_per_file];
@@ -479,18 +471,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_pi0Nelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_pi0Nelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/pip/pip" << ke << ".txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_pi0Nelas_points_per_file,
-       ipoint, hN_pi0Nelas_costh, hN_pi0Nelas_xsec,2);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_pi0Nelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/pip/pip" << ke << ".txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_pi0Nelas_points_per_file,
+		 ipoint, hN_pi0Nelas_costh, hN_pi0Nelas_xsec,2);
     }//loop over files
 
     fhN2dXSecPi0N_Elas = new BLI2DNonUnifGrid(hN_pi0Nelas_nfiles,hN_pi0Nelas_points_per_file,
-			   hN_pi0Nelas_energies,hN_pi0Nelas_costh,hN_pi0Nelas_xsec);
+					      hN_pi0Nelas_energies,hN_pi0Nelas_costh,hN_pi0Nelas_xsec);
   }
 
   // kIHNFtElas, pimN :
@@ -501,12 +493,12 @@ void INukeHadroData2019::LoadCrossSections(void)
 
     double hN_pimNelas_energies[hN_pimNelas_nfiles] = {
       10,  20,  30,  40,  50,  60,  70,  80,  90,
-     100, 110, 120, 130, 140, 150, 160, 170, 180, 190,
-     200, 210, 220, 230, 240, 250, 260, 270, 280, 290,
-     300, 340, 380, 420, 460, 500, 540, 580, 620, 660,
-     700, 740, 780, 820, 860, 900, 940, 980,
-     1020, 1060, 1100, 1140, 1180, 1220, 1260,
-     1300, 1340, 1380, 1420, 1460, 1500
+      100, 110, 120, 130, 140, 150, 160, 170, 180, 190,
+      200, 210, 220, 230, 240, 250, 260, 270, 280, 290,
+      300, 340, 380, 420, 460, 500, 540, 580, 620, 660,
+      700, 740, 780, 820, 860, 900, 940, 980,
+      1020, 1060, 1100, 1140, 1180, 1220, 1260,
+      1300, 1340, 1380, 1420, 1460, 1500
     };
 
     double hN_pimNelas_costh [hN_pimNelas_points_per_file];
@@ -515,18 +507,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_pimNelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_pimNelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/pim/pim" << ke << ".txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_pimNelas_points_per_file,
-       ipoint, hN_pimNelas_costh, hN_pimNelas_xsec,2);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_pimNelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/pim/pim" << ke << ".txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_pimNelas_points_per_file,
+		 ipoint, hN_pimNelas_costh, hN_pimNelas_xsec,2);
     }//loop over files
 
     fhN2dXSecPimN_Elas = new BLI2DNonUnifGrid(hN_pimNelas_nfiles,hN_pimNelas_points_per_file,
-			   hN_pimNelas_energies,hN_pimNelas_costh,hN_pimNelas_xsec);
+					      hN_pimNelas_energies,hN_pimNelas_costh,hN_pimNelas_xsec);
   }
 
   // kIHNFtElas, kpn :
@@ -536,8 +528,8 @@ void INukeHadroData2019::LoadCrossSections(void)
     const int hN_kpNelas_npoints = hN_kpNelas_points_per_file * hN_kpNelas_nfiles;
 
     double hN_kpNelas_energies[hN_kpNelas_nfiles] = {
-     100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
-     1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800
+      100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
+      1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800
     };
 
     double hN_kpNelas_costh [hN_kpNelas_points_per_file];
@@ -546,18 +538,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_kpNelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_kpNelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/kpn/kpn" << ke << ".txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_kpNelas_points_per_file,
-       ipoint, hN_kpNelas_costh, hN_kpNelas_xsec,2);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_kpNelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/kpn/kpn" << ke << ".txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_kpNelas_points_per_file,
+		 ipoint, hN_kpNelas_costh, hN_kpNelas_xsec,2);
     }//loop over files
 
     fhN2dXSecKpN_Elas = new BLI2DNonUnifGrid(hN_kpNelas_nfiles,hN_kpNelas_points_per_file,
-			   hN_kpNelas_energies,hN_kpNelas_costh,hN_kpNelas_xsec);
+					     hN_kpNelas_energies,hN_kpNelas_costh,hN_kpNelas_xsec);
   }
   // kIHNFtCEx, kpn :
   {
@@ -566,8 +558,8 @@ void INukeHadroData2019::LoadCrossSections(void)
     const int hN_kpNcex_npoints = hN_kpNcex_points_per_file * hN_kpNcex_nfiles;
 
     double hN_kpNcex_energies[hN_kpNcex_nfiles] = {
-     100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
-     1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800
+      100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
+      1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800
     };
 
     double hN_kpNcex_costh [hN_kpNcex_points_per_file];
@@ -576,25 +568,25 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_kpNcex_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_kpNcex_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/kpncex/kpcex" << ke << ".txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_kpNcex_points_per_file,
-       ipoint, hN_kpNcex_costh, hN_kpNcex_xsec,2);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_kpNcex_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/kpncex/kpcex" << ke << ".txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_kpNcex_points_per_file,
+		 ipoint, hN_kpNcex_costh, hN_kpNcex_xsec,2);
     }//loop over files
 
     /*double hN_kpNcex_costh_cond [hN_kpNcex_points_per_file];
-    for (int ient = 0; ient < hN_kpNcex_points_per_file; ient++) {
+      for (int ient = 0; ient < hN_kpNcex_points_per_file; ient++) {
       hN_kpNcex_costh_cond[ient] = hN_kpNcex_costh[ient];
       }*/
 
     fhN2dXSecKpN_CEx = new BLI2DNonUnifGrid(hN_kpNcex_nfiles,hN_kpNcex_points_per_file,
-			   hN_kpNcex_energies,hN_kpNcex_costh,hN_kpNcex_xsec);
+					    hN_kpNcex_energies,hN_kpNcex_costh,hN_kpNcex_xsec);
   }
-//----------------------------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------
 
 
   // kIHNFtElas, kpp :
@@ -604,8 +596,8 @@ void INukeHadroData2019::LoadCrossSections(void)
     const int hN_kpPelas_npoints = hN_kpPelas_points_per_file * hN_kpPelas_nfiles;
 
     double hN_kpPelas_energies[hN_kpPelas_nfiles] = {
-     100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
-     1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800
+      100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
+      1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800
     };
 
     double hN_kpPelas_costh [hN_kpPelas_points_per_file];
@@ -614,19 +606,19 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_kpPelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_kpPelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/kpp/kpp" << ke << ".txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_kpPelas_points_per_file,
-       ipoint, hN_kpPelas_costh, hN_kpPelas_xsec,2);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_kpPelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/kpp/kpp" << ke << ".txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_kpPelas_points_per_file,
+		 ipoint, hN_kpPelas_costh, hN_kpPelas_xsec,2);
     }//loop over files
 
     fhN2dXSecKpP_Elas = new BLI2DNonUnifGrid(hN_kpPelas_nfiles,hN_kpPelas_points_per_file,
-			   hN_kpPelas_energies,hN_kpPelas_costh,hN_kpPelas_xsec);
-	}
+					     hN_kpPelas_energies,hN_kpPelas_costh,hN_kpPelas_xsec);
+  }
 
   // kIHNFtCEx, (pi+, pi0, pi-) N
   {
@@ -636,12 +628,12 @@ void INukeHadroData2019::LoadCrossSections(void)
 
     double hN_piNcex_energies[hN_piNcex_nfiles] = {
       10,  20,  30,  40,  50,  60,  70,  80,  90,
-     100, 110, 120, 130, 140, 150, 160, 170, 180, 190,
-     200, 210, 220, 230, 240, 250, 260, 270, 280, 290,
-     300, 340, 380, 420, 460, 500, 540, 580, 620, 660,
-     700, 740, 780, 820, 860, 900, 940, 980,
-     1020, 1060, 1100, 1140, 1180, 1220, 1260,
-     1300, 1340, 1380, 1420, 1460, 1500
+      100, 110, 120, 130, 140, 150, 160, 170, 180, 190,
+      200, 210, 220, 230, 240, 250, 260, 270, 280, 290,
+      300, 340, 380, 420, 460, 500, 540, 580, 620, 660,
+      700, 740, 780, 820, 860, 900, 940, 980,
+      1020, 1060, 1100, 1140, 1180, 1220, 1260,
+      1300, 1340, 1380, 1420, 1460, 1500
     };
 
     double hN_piNcex_costh [hN_piNcex_points_per_file];
@@ -650,18 +642,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_piNcex_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_piNcex_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/pie/pie" << ke << ".txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_piNcex_points_per_file,
-       ipoint, hN_piNcex_costh, hN_piNcex_xsec,2);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_piNcex_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/pie/pie" << ke << ".txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_piNcex_points_per_file,
+		 ipoint, hN_piNcex_costh, hN_piNcex_xsec,2);
     }//loop over files
 
     fhN2dXSecPiN_CEx = new BLI2DNonUnifGrid(hN_piNcex_nfiles,hN_piNcex_points_per_file,
-			   hN_piNcex_energies,hN_piNcex_costh,hN_piNcex_xsec);
+					    hN_piNcex_energies,hN_piNcex_costh,hN_piNcex_xsec);
   }
 
   // kIHNFtAbs, (pi+, pi0, pi-) N
@@ -672,7 +664,7 @@ void INukeHadroData2019::LoadCrossSections(void)
 
     double hN_piNabs_energies[hN_piNabs_nfiles] = {
       50,  75, 100, 125, 150, 175, 200, 225, 250, 275,
-     300, 325, 350, 375, 400, 425, 450, 475, 500
+      300, 325, 350, 375, 400, 425, 450, 475, 500
     };
 
     double hN_piNabs_costh [hN_piNabs_points_per_file];
@@ -681,22 +673,22 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_piNabs_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_piNabs_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/pid2p/pid2p" << ke << ".txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_piNabs_points_per_file,
-       ipoint, hN_piNabs_costh, hN_piNabs_xsec,2);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_piNabs_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/pid2p/pid2p" << ke << ".txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_piNabs_points_per_file,
+		 ipoint, hN_piNabs_costh, hN_piNabs_xsec,2);
     }//loop over files
 
     fhN2dXSecPiN_Abs = new BLI2DNonUnifGrid(hN_piNabs_nfiles,hN_piNabs_points_per_file,
-			   hN_piNabs_energies,hN_piNabs_costh,hN_piNabs_xsec);
+					    hN_piNabs_energies,hN_piNabs_costh,hN_piNabs_xsec);
   }
 
   // kIHNFtInelas, gamma p -> p pi0
-    {
+  {
     const int hN_gampi0pInelas_nfiles = 29;
     const int hN_gampi0pInelas_points_per_file = 37;
     const int hN_gampi0pInelas_npoints = hN_gampi0pInelas_points_per_file * hN_gampi0pInelas_nfiles;
@@ -713,18 +705,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_gampi0pInelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_gampi0pInelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/gampi0p/" << ke << "-pi0p.txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_gampi0pInelas_points_per_file,
-       ipoint, hN_gampi0pInelas_costh, hN_gampi0pInelas_xsec,3);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_gampi0pInelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/gampi0p/" << ke << "-pi0p.txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_gampi0pInelas_points_per_file,
+		 ipoint, hN_gampi0pInelas_costh, hN_gampi0pInelas_xsec,3);
     }//loop over files
 
     fhN2dXSecGamPi0P_Inelas = new BLI2DNonUnifGrid(hN_gampi0pInelas_nfiles,hN_gampi0pInelas_points_per_file,
-			   hN_gampi0pInelas_energies,hN_gampi0pInelas_costh,hN_gampi0pInelas_xsec);
+						   hN_gampi0pInelas_energies,hN_gampi0pInelas_costh,hN_gampi0pInelas_xsec);
   }
 
   // kIHNFtInelas, gamma n -> n pi0
@@ -744,18 +736,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_gampi0nInelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_gampi0nInelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/gampi0n/" << ke << "-pi0n.txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_gampi0nInelas_points_per_file,
-       ipoint, hN_gampi0nInelas_costh, hN_gampi0nInelas_xsec,3);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_gampi0nInelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/gampi0n/" << ke << "-pi0n.txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_gampi0nInelas_points_per_file,
+		 ipoint, hN_gampi0nInelas_costh, hN_gampi0nInelas_xsec,3);
     }//loop over files
 
     fhN2dXSecGamPi0N_Inelas = new BLI2DNonUnifGrid(hN_gampi0nInelas_nfiles,hN_gampi0nInelas_points_per_file,
-			   hN_gampi0nInelas_energies,hN_gampi0nInelas_costh,hN_gampi0nInelas_xsec);
+						   hN_gampi0nInelas_energies,hN_gampi0nInelas_costh,hN_gampi0nInelas_xsec);
   }
 
   // kIHNFtInelas, gamma p -> n pi+
@@ -776,18 +768,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_gampipnInelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_gampipnInelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/gampi+n/" << ke << "-pi+n.txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_gampipnInelas_points_per_file,
-       ipoint, hN_gampipnInelas_costh, hN_gampipnInelas_xsec,3);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_gampipnInelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/gampi+n/" << ke << "-pi+n.txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_gampipnInelas_points_per_file,
+		 ipoint, hN_gampipnInelas_costh, hN_gampipnInelas_xsec,3);
     }//loop over files
 
     fhN2dXSecGamPipN_Inelas = new BLI2DNonUnifGrid(hN_gampipnInelas_nfiles,hN_gampipnInelas_points_per_file,
-			   hN_gampipnInelas_energies,hN_gampipnInelas_costh,hN_gampipnInelas_xsec);
+						   hN_gampipnInelas_energies,hN_gampipnInelas_costh,hN_gampipnInelas_xsec);
   }
 
   // kIHNFtInelas, gamma n -> p pi-
@@ -808,18 +800,18 @@ void INukeHadroData2019::LoadCrossSections(void)
     int ipoint=0;
 
     for(int ifile = 0; ifile < hN_gampimpInelas_nfiles; ifile++) {
-     // build filename
-     ostringstream hN_datafile;
-     double ke = hN_gampimpInelas_energies[ifile];
-     hN_datafile << data_dir << "/diff_ang/gampi-p/" << ke << "-pi-p.txt";
-     // read data
-     ReadhNFile(
-       hN_datafile.str(), ke, hN_gampimpInelas_points_per_file,
-       ipoint, hN_gampimpInelas_costh, hN_gampimpInelas_xsec,3);
+      // build filename
+      ostringstream hN_datafile;
+      double ke = hN_gampimpInelas_energies[ifile];
+      hN_datafile << data_dir << "/diff_ang/gampi-p/" << ke << "-pi-p.txt";
+      // read data
+      ReadhNFile(
+		 hN_datafile.str(), ke, hN_gampimpInelas_points_per_file,
+		 ipoint, hN_gampimpInelas_costh, hN_gampimpInelas_xsec,3);
     }//loop over files
 
     fhN2dXSecGamPimP_Inelas = new BLI2DNonUnifGrid(hN_gampimpInelas_nfiles,hN_gampimpInelas_points_per_file,
-			   hN_gampimpInelas_energies,hN_gampimpInelas_costh,hN_gampimpInelas_xsec);
+						   hN_gampimpInelas_energies,hN_gampimpInelas_costh,hN_gampimpInelas_xsec);
   }
 
 
@@ -837,34 +829,34 @@ void INukeHadroData2019::LoadCrossSections(void)
   /*
   // kIHNFtTot,   pip + A                                            PipA_Tot
   {
-    const int pipATot_nfiles = 22;
-    const int pipATot_nuclei[pipATot_nfiles] = {1, 2, 3, 4, 6, 7, 9, 12, 16, 27, 28, 32, 40, 48, 56, 58, 63, 93, 120, 165, 181, 209};
-    const int pipATot_npoints = 203;
+  const int pipATot_nfiles = 22;
+  const int pipATot_nuclei[pipATot_nfiles] = {1, 2, 3, 4, 6, 7, 9, 12, 16, 27, 28, 32, 40, 48, 56, 58, 63, 93, 120, 165, 181, 209};
+  const int pipATot_npoints = 203;
 
-    TPipA_Tot = new TGraph2D(pipATot_npoints);
-    TPipA_Tot->SetNameTitle("TPipA_Tot","TPipA_Tot");
-    TPipA_Tot->SetDirectory(0);
+  TPipA_Tot = new TGraph2D(pipATot_npoints);
+  TPipA_Tot->SetNameTitle("TPipA_Tot","TPipA_Tot");
+  TPipA_Tot->SetDirectory(0);
 
-    int ipoint=0;
-    double x, y;
+  int ipoint=0;
+  double x, y;
 
-    for(int ifile=0; ifile < pipATot_nfiles; ifile++) {
-      ostringstream ADep_datafile;
-      int nucleus = pipATot_nuclei[ifile];
-      ADep_datafile << data_dir << "/tot_xsec/pipA_tot/pip" << nucleus << "_tot.txt";
-      TGraph * buff = new TGraph(ADep_datafile.str().c_str());
-      buff->SetNameTitle("buff","buff");
-      for(int i=0; i < buff->GetN(); i++) {
-	buff -> GetPoint(i,x,y);
-	TPipA_Tot -> SetPoint(ipoint,(double)nucleus,x,y);
-	ipoint++;
-      }
-      delete buff;
-    }
+  for(int ifile=0; ifile < pipATot_nfiles; ifile++) {
+  ostringstream ADep_datafile;
+  int nucleus = pipATot_nuclei[ifile];
+  ADep_datafile << data_dir << "/tot_xsec/pipA_tot/pip" << nucleus << "_tot.txt";
+  TGraph * buff = new TGraph(ADep_datafile.str().c_str());
+  buff->SetNameTitle("buff","buff");
+  for(int i=0; i < buff->GetN(); i++) {
+  buff -> GetPoint(i,x,y);
+  TPipA_Tot -> SetPoint(ipoint,(double)nucleus,x,y);
+  ipoint++;
+  }
+  delete buff;
+  }
 
-    if (saveTGraphsToFile) {
-      TPipA_Tot -> Write("TPipA_Tot"); // TPipA_Tot will be _key_ name
-    }
+  if (saveTGraphsToFile) {
+  TPipA_Tot -> Write("TPipA_Tot"); // TPipA_Tot will be _key_ name
+  }
   }
   */
 
@@ -1081,34 +1073,34 @@ void INukeHadroData2019::LoadCrossSections(void)
   /*
   // kIHNFtElas, pip + A                                                            PipA_Elas_frac
   {
-    const int pipAElas_f_nfiles = 18;
-    const int pipAElas_f_nuclei[pipAElas_f_nfiles] = {1, 2, 3, 4, 7, 9, 12, 16, 27, 48, 56, 58, 63, 93, 120, 165, 181, 209};
-    const int pipAElas_f_npoints = 125;
+  const int pipAElas_f_nfiles = 18;
+  const int pipAElas_f_nuclei[pipAElas_f_nfiles] = {1, 2, 3, 4, 7, 9, 12, 16, 27, 48, 56, 58, 63, 93, 120, 165, 181, 209};
+  const int pipAElas_f_npoints = 125;
 
-    TfracPipA_Elas = new TGraph2D(pipAElas_f_npoints);
-    TfracPipA_Elas->SetNameTitle("TfracPipA_Elas","TfracPipA_Elas");
-    TfracPipA_Elas->SetDirectory(0);
+  TfracPipA_Elas = new TGraph2D(pipAElas_f_npoints);
+  TfracPipA_Elas->SetNameTitle("TfracPipA_Elas","TfracPipA_Elas");
+  TfracPipA_Elas->SetDirectory(0);
 
-    int ipoint=0;
-    double x, y;
+  int ipoint=0;
+  double x, y;
 
-    for(int ifile=0; ifile < pipAElas_f_nfiles; ifile++) {
-      ostringstream ADep_datafile;
-      int nucleus = pipAElas_f_nuclei[ifile];
-      ADep_datafile << data_dir << "/tot_xsec/pipA_elas_frac/pip" << nucleus << "_elas_frac.txt";
-      TGraph * buff = new TGraph(ADep_datafile.str().c_str());
-      buff->SetNameTitle("buff","buff");
-      for(int i=0; i < buff->GetN(); i++) {
-	buff -> GetPoint(i,x,y);
-	TfracPipA_Elas -> SetPoint(ipoint,(double)nucleus,x,y);
-	ipoint++;
-      }
-      delete buff;
-    }
+  for(int ifile=0; ifile < pipAElas_f_nfiles; ifile++) {
+  ostringstream ADep_datafile;
+  int nucleus = pipAElas_f_nuclei[ifile];
+  ADep_datafile << data_dir << "/tot_xsec/pipA_elas_frac/pip" << nucleus << "_elas_frac.txt";
+  TGraph * buff = new TGraph(ADep_datafile.str().c_str());
+  buff->SetNameTitle("buff","buff");
+  for(int i=0; i < buff->GetN(); i++) {
+  buff -> GetPoint(i,x,y);
+  TfracPipA_Elas -> SetPoint(ipoint,(double)nucleus,x,y);
+  ipoint++;
+  }
+  delete buff;
+  }
 
-    if (saveTGraphsToFile) {
-      TfracPipA_Elas -> Write("TfracPipA_Elas");
-    }
+  if (saveTGraphsToFile) {
+  TfracPipA_Elas -> Write("TfracPipA_Elas");
+  }
 
   }
   */
@@ -1148,7 +1140,7 @@ void INukeHadroData2019::LoadCrossSections(void)
 
 
   // kIHNFtPiPro, pip + A                                                            PipA_PiPro_frac
-   {
+  {
     const int pipAPiPro_f_nfiles = 17;
     const int pipAPiPro_f_nuclei[pipAPiPro_f_nfiles] = {1, 2, 3, 4, 7, 9, 12, 16, 48, 56, 58, 63, 93, 120, 165, 181, 209};
     const int pipAPiPro_f_npoints = 76;
@@ -1177,24 +1169,26 @@ void INukeHadroData2019::LoadCrossSections(void)
     if (saveTGraphsToFile) {
       TfracPipA_PiPro -> Write("TfracPipA_PiPro");
     }
-   }
+  }
 
-   TGraphs_file.Close();
+  TGraphs_file.Close();
 
-   LOG("INukeData", pINFO)  << "Done building x-section splines...";
+  LOG("INukeData", pINFO)  << "Done building x-section splines...";
+
+  fIsConfigured = true ;
    
 }
 //____________________________________________________________________________
 void INukeHadroData2019::ReadhNFile(
-  string filename, double ke, int npoints, int & curr_point,
-  double * costh_array, double * xsec_array, int cols)
+				    string filename, double ke, int npoints, int & curr_point,
+				    double * costh_array, double * xsec_array, int cols)
 {
   // open
   std::ifstream hN_stream(filename.c_str(), ios::in);
   if(!hN_stream.good()) {
-      LOG("INukeData", pERROR)
-          << "Error reading INTRANUKE/hN data from: " << filename;
-      return;
+    LOG("INukeData", pERROR)
+      << "Error reading INTRANUKE/hN data from: " << filename;
+    return;
   }
 
   if(cols<2) {
@@ -1206,7 +1200,7 @@ void INukeHadroData2019::ReadhNFile(
   }
 
   LOG("INukeData", pINFO)
-     << "Reading INTRANUKE/hN data from: " << filename;
+    << "Reading INTRANUKE/hN data from: " << filename;
 
   // skip initial comments
   char cbuf[501];
@@ -1220,33 +1214,33 @@ void INukeHadroData2019::ReadhNFile(
   double trash = 0;
 
   for(int ip = 0; ip < npoints; ip++) {
-     hN_stream >> angle >> xsec;
+    hN_stream >> angle >> xsec;
 
-     for(int ic = 0; ic < (cols-2); ic++) {
-       hN_stream >> trash;
-     }
+    for(int ic = 0; ic < (cols-2); ic++) {
+      hN_stream >> trash;
+    }
 
-     LOG("INukeData", pDEBUG)
-       << "Adding data point: (KE = " << ke << " MeV, angle = "
-       << angle << ", sigma = " << xsec << " mbarn)";
-     costh_array[ip] = TMath::Cos(angle*kPi/180.);
-     xsec_array [curr_point] = xsec;
-     curr_point++;
+    LOG("INukeData", pDEBUG)
+      << "Adding data point: (KE = " << ke << " MeV, angle = "
+      << angle << ", sigma = " << xsec << " mbarn)";
+    costh_array[ip] = TMath::Cos(angle*kPi/180.);
+    xsec_array [curr_point] = xsec;
+    curr_point++;
   }
 }
 //____________________________________________________________________________
 double INukeHadroData2019::XSec(
-  int hpdgc, int tgtpdgc, int nppdgc, INukeFateHN_t fate, double ke, double costh) const
+				int hpdgc, int tgtpdgc, int nppdgc, INukeFateHN_t fate, double ke, double costh) const
 {
-// inputs
-//      fate    : h+N fate code
-//      hpdgc   : h PDG code
-//      tgtpdgc : N PDG code
-//      nppdgc  : product N PDG code
-//      ke      : kinetic energy (MeV)
-//      costh   : cos(scattering angle)
-// returns
-//      xsec    : mbarn
+  // inputs
+  //      fate    : h+N fate code
+  //      hpdgc   : h PDG code
+  //      tgtpdgc : N PDG code
+  //      nppdgc  : product N PDG code
+  //      ke      : kinetic energy (MeV)
+  //      costh   : cos(scattering angle)
+  // returns
+  //      xsec    : mbarn
 
   double ke_eval    = ke;
   double costh_eval = costh;
@@ -1256,66 +1250,66 @@ double INukeHadroData2019::XSec(
 
   if(fate==kIHNFtElas) {
 
-     if( (hpdgc==kPdgProton  && tgtpdgc==kPdgProton) ||
-         (hpdgc==kPdgNeutron && tgtpdgc==kPdgNeutron) )
-     {
-       ke_eval = TMath::Min(ke_eval, 999.);
-       ke_eval = TMath::Max(ke_eval,  50.);
-       return fhN2dXSecPP_Elas->Evaluate(ke_eval, costh_eval);
-     }
-     else
-     if( (hpdgc==kPdgProton  && tgtpdgc==kPdgNeutron) ||
-         (hpdgc==kPdgNeutron && tgtpdgc==kPdgProton) )
-     {
-       ke_eval = TMath::Min(ke_eval, 999.);
-       ke_eval = TMath::Max(ke_eval,  50.);
-       return fhN2dXSecNP_Elas->Evaluate(ke_eval, costh_eval);
-     }
-     else
-     if(hpdgc==kPdgPiP)
-     {
-       ke_eval = TMath::Min(ke_eval, 1499.);
-       ke_eval = TMath::Max(ke_eval,   10.);
-       return fhN2dXSecPipN_Elas->Evaluate(ke_eval, costh_eval);
-     }
-     else
-     if(hpdgc==kPdgPi0)
-     {
-       ke_eval = TMath::Min(ke_eval, 1499.);
-       ke_eval = TMath::Max(ke_eval,   10.);
-       return fhN2dXSecPi0N_Elas->Evaluate(ke_eval, costh_eval);
-     }
-     else
-     if(hpdgc==kPdgPiM)
-     {
-       ke_eval = TMath::Min(ke_eval, 1499.);
-       ke_eval = TMath::Max(ke_eval,   10.);
-       return fhN2dXSecPimN_Elas->Evaluate(ke_eval, costh_eval);
-     }
-     else
-     if(hpdgc==kPdgKP && tgtpdgc==kPdgNeutron)
-     {
-       ke_eval = TMath::Min(ke_eval, 1799.);
-       ke_eval = TMath::Max(ke_eval,  100.);
-       return fhN2dXSecKpN_Elas->Evaluate(ke_eval, costh_eval);
-     }
-     else
-     if(hpdgc==kPdgKP && tgtpdgc==kPdgProton)
-     {
-       ke_eval = TMath::Min(ke_eval, 1799.);
-       ke_eval = TMath::Max(ke_eval,  100.);
-       return fhN2dXSecKpP_Elas->Evaluate(ke_eval, costh_eval);
-     }
+    if( (hpdgc==kPdgProton  && tgtpdgc==kPdgProton) ||
+	(hpdgc==kPdgNeutron && tgtpdgc==kPdgNeutron) )
+      {
+	ke_eval = TMath::Min(ke_eval, 999.);
+	ke_eval = TMath::Max(ke_eval,  50.);
+	return fhN2dXSecPP_Elas->Evaluate(ke_eval, costh_eval);
+      }
+    else
+      if( (hpdgc==kPdgProton  && tgtpdgc==kPdgNeutron) ||
+	  (hpdgc==kPdgNeutron && tgtpdgc==kPdgProton) )
+	{
+	  ke_eval = TMath::Min(ke_eval, 999.);
+	  ke_eval = TMath::Max(ke_eval,  50.);
+	  return fhN2dXSecNP_Elas->Evaluate(ke_eval, costh_eval);
+	}
+      else
+	if(hpdgc==kPdgPiP)
+	  {
+	    ke_eval = TMath::Min(ke_eval, 1499.);
+	    ke_eval = TMath::Max(ke_eval,   10.);
+	    return fhN2dXSecPipN_Elas->Evaluate(ke_eval, costh_eval);
+	  }
+	else
+	  if(hpdgc==kPdgPi0)
+	    {
+	      ke_eval = TMath::Min(ke_eval, 1499.);
+	      ke_eval = TMath::Max(ke_eval,   10.);
+	      return fhN2dXSecPi0N_Elas->Evaluate(ke_eval, costh_eval);
+	    }
+	  else
+	    if(hpdgc==kPdgPiM)
+	      {
+		ke_eval = TMath::Min(ke_eval, 1499.);
+		ke_eval = TMath::Max(ke_eval,   10.);
+		return fhN2dXSecPimN_Elas->Evaluate(ke_eval, costh_eval);
+	      }
+	    else
+	      if(hpdgc==kPdgKP && tgtpdgc==kPdgNeutron)
+		{
+		  ke_eval = TMath::Min(ke_eval, 1799.);
+		  ke_eval = TMath::Max(ke_eval,  100.);
+		  return fhN2dXSecKpN_Elas->Evaluate(ke_eval, costh_eval);
+		}
+	      else
+		if(hpdgc==kPdgKP && tgtpdgc==kPdgProton)
+		  {
+		    ke_eval = TMath::Min(ke_eval, 1799.);
+		    ke_eval = TMath::Max(ke_eval,  100.);
+		    return fhN2dXSecKpP_Elas->Evaluate(ke_eval, costh_eval);
+		  }
   }
 
   else if(fate == kIHNFtCEx) {
     if( (hpdgc==kPdgPiP || hpdgc==kPdgPi0 || hpdgc==kPdgPiM) &&
-         (tgtpdgc==kPdgProton || tgtpdgc==kPdgNeutron) )
-     {
+	(tgtpdgc==kPdgProton || tgtpdgc==kPdgNeutron) )
+      {
         ke_eval = TMath::Min(ke_eval, 1499.);
         ke_eval = TMath::Max(ke_eval,   10.);
         return fhN2dXSecPiN_CEx->Evaluate(ke_eval, costh_eval);
-     }
+      }
     else if( (hpdgc == kPdgProton && tgtpdgc == kPdgProton) ||
 	     (hpdgc == kPdgNeutron && tgtpdgc == kPdgNeutron) )
       {
@@ -1332,51 +1326,51 @@ double INukeHadroData2019::XSec(
 	return fhN2dXSecNP_Elas->Evaluate(ke_eval, costh_eval);
       }
     else if(hpdgc == kPdgKP && tgtpdgc == kPdgNeutron) {
-    	ke_eval = TMath::Min(ke_eval, 1799.);
-    	ke_eval = TMath::Max(ke_eval,  100.);
-    	return fhN2dXSecKpN_CEx->Evaluate(ke_eval, costh_eval);
+      ke_eval = TMath::Min(ke_eval, 1799.);
+      ke_eval = TMath::Max(ke_eval,  100.);
+      return fhN2dXSecKpN_CEx->Evaluate(ke_eval, costh_eval);
     }
   }
 
   else if(fate == kIHNFtAbs) {
     if( (hpdgc==kPdgPiP || hpdgc==kPdgPi0 || hpdgc==kPdgPiM) &&
-         (tgtpdgc==kPdgProton || tgtpdgc==kPdgNeutron) )
-     {
+	(tgtpdgc==kPdgProton || tgtpdgc==kPdgNeutron) )
+      {
         ke_eval = TMath::Min(ke_eval, 499.);
         ke_eval = TMath::Max(ke_eval,  50.);
         return fhN2dXSecPiN_Abs->Evaluate(ke_eval, costh_eval);
-     }
+      }
     if(hpdgc==kPdgKP) return 1.;  //isotropic since no data ???
   }
 
   else if(fate == kIHNFtInelas) {
     if( hpdgc==kPdgGamma && tgtpdgc==kPdgProton  &&nppdgc==kPdgProton  )
-    {
-       ke_eval = TMath::Min(ke_eval, 1199.);
-       ke_eval = TMath::Max(ke_eval,  160.);
-       return fhN2dXSecGamPi0P_Inelas->Evaluate(ke_eval, costh_eval);
-    }
+      {
+	ke_eval = TMath::Min(ke_eval, 1199.);
+	ke_eval = TMath::Max(ke_eval,  160.);
+	return fhN2dXSecGamPi0P_Inelas->Evaluate(ke_eval, costh_eval);
+      }
     else
-    if( hpdgc==kPdgGamma && tgtpdgc==kPdgProton  && nppdgc==kPdgNeutron )
-    {
-       ke_eval = TMath::Min(ke_eval, 1199.);
-       ke_eval = TMath::Max(ke_eval,  160.);
-       return fhN2dXSecGamPipN_Inelas->Evaluate(ke_eval, costh_eval);
-    }
-    else
-    if( hpdgc==kPdgGamma && tgtpdgc==kPdgNeutron && nppdgc==kPdgProton  )
-    {
-       ke_eval = TMath::Min(ke_eval, 1199.);
-       ke_eval = TMath::Max(ke_eval,  160.);
-       return fhN2dXSecGamPimP_Inelas->Evaluate(ke_eval, costh_eval);
-    }
-    else
-    if( hpdgc==kPdgGamma && tgtpdgc==kPdgNeutron && nppdgc==kPdgNeutron )
-    {
-       ke_eval = TMath::Min(ke_eval, 1199.);
-       ke_eval = TMath::Max(ke_eval,  160.);
-      return fhN2dXSecGamPi0N_Inelas->Evaluate(ke_eval, costh_eval);
-    }
+      if( hpdgc==kPdgGamma && tgtpdgc==kPdgProton  && nppdgc==kPdgNeutron )
+	{
+	  ke_eval = TMath::Min(ke_eval, 1199.);
+	  ke_eval = TMath::Max(ke_eval,  160.);
+	  return fhN2dXSecGamPipN_Inelas->Evaluate(ke_eval, costh_eval);
+	}
+      else
+	if( hpdgc==kPdgGamma && tgtpdgc==kPdgNeutron && nppdgc==kPdgProton  )
+	  {
+	    ke_eval = TMath::Min(ke_eval, 1199.);
+	    ke_eval = TMath::Max(ke_eval,  160.);
+	    return fhN2dXSecGamPimP_Inelas->Evaluate(ke_eval, costh_eval);
+	  }
+	else
+	  if( hpdgc==kPdgGamma && tgtpdgc==kPdgNeutron && nppdgc==kPdgNeutron )
+	    {
+	      ke_eval = TMath::Min(ke_eval, 1199.);
+	      ke_eval = TMath::Max(ke_eval,  160.);
+	      return fhN2dXSecGamPi0N_Inelas->Evaluate(ke_eval, costh_eval);
+	    }
   }
 
   return 0;
@@ -1408,7 +1402,7 @@ double INukeHadroData2019::FracADep(int hpdgc, INukeFateHA_t fate, double ke, in
     double total = frac_cex + frac_inelas + frac_abs + frac_pipro; // + frac_elas
 
     if ( fate == kIHAFtCEx ) return frac_cex / total;
-  //else if ( fate == kIHAFtElas   ) return frac_elas / total;
+    //else if ( fate == kIHAFtElas   ) return frac_elas / total;
     else if ( fate == kIHAFtInelas ) return frac_inelas / total;
     else if ( fate == kIHAFtAbs    ) return frac_abs / total;
     else if ( fate == kIHAFtPiProd ) return frac_pipro / total;
@@ -1448,7 +1442,7 @@ double INukeHadroData2019::FracAIndep(int hpdgc, INukeFateHA_t fate, double ke) 
     double total = frac_cex + frac_inelas + frac_abs + frac_pipro + frac_comp; // + frac_elas
 
     if ( fate == kIHAFtCEx ) return frac_cex / total;
-  //else if ( fate == kIHAFtElas   ) return frac_elas / total;
+    //else if ( fate == kIHAFtElas   ) return frac_elas / total;
     else if ( fate == kIHAFtInelas ) return frac_inelas / total;
     else if ( fate == kIHAFtAbs    ) return frac_abs / total;
     else if ( fate == kIHAFtPiProd ) return frac_pipro / total;
@@ -1472,7 +1466,7 @@ double INukeHadroData2019::FracAIndep(int hpdgc, INukeFateHA_t fate, double ke) 
     double total = frac_cex + frac_inelas + frac_abs + frac_pipro + frac_comp; // + frac_elas
 
     if ( fate == kIHAFtCEx ) return frac_cex / total;
-  //else if ( fate == kIHAFtElas   ) return frac_elas / total;
+    //else if ( fate == kIHAFtElas   ) return frac_elas / total;
     else if ( fate == kIHAFtInelas ) return frac_inelas / total;
     else if ( fate == kIHAFtAbs    ) return frac_abs / total;
     else if ( fate == kIHAFtPiProd ) return frac_pipro / total;
@@ -1486,7 +1480,7 @@ double INukeHadroData2019::FracAIndep(int hpdgc, INukeFateHA_t fate, double ke) 
   else if (hpdgc == kPdgKP) {
     // handle K+
     double frac_inelas = fFracKA_Inel->Evaluate(ke);
-  //double frac_elas = fFracKA_Elas->Evaluate(ke);
+    //double frac_elas = fFracKA_Elas->Evaluate(ke);
     double frac_abs = fFracKA_Abs->Evaluate(ke);
 
     // Protect against unitarity violation due to interpolation problems
@@ -1507,9 +1501,9 @@ double INukeHadroData2019::FracAIndep(int hpdgc, INukeFateHA_t fate, double ke) 
 //____________________________________________________________________________
 double INukeHadroData2019::XSec(int hpdgc, INukeFateHN_t fate, double ke, int targA, int targZ) const
 {
-// return the x-section for the input fate for the particle with the input pdg
-// code at the input kinetic energy
-//
+  // return the x-section for the input fate for the particle with the input pdg
+  // code at the input kinetic energy
+  //
   ke = TMath::Max(fMinKinEnergy,   ke);
   ke = TMath::Min(fMaxKinEnergyHN, ke);
 
@@ -1517,134 +1511,134 @@ double INukeHadroData2019::XSec(int hpdgc, INukeFateHN_t fate, double ke, int ta
 
   double xsec=0;
 
-    if (hpdgc == kPdgPiP) {
+  if (hpdgc == kPdgPiP) {
     /* handle pi+ */
-         if (fate == kIHNFtCEx   ) {xsec = TMath::Max(0., fXSecPipp_CEx  -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecPipn_CEx  -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+    if (fate == kIHNFtCEx   ) {xsec = TMath::Max(0., fXSecPipp_CEx  -> Evaluate(ke)) *  targZ;
+      xsec+= TMath::Max(0., fXSecPipn_CEx  -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtElas  ) {xsec = TMath::Max(0., fXSecPipp_Elas -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecPipn_Elas -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+      xsec+= TMath::Max(0., fXSecPipn_Elas -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtInelas) {xsec = TMath::Max(0., fXSecPipp_Reac -> Evaluate(ke)) *  targZ;
-				    xsec+= TMath::Max(0., fXSecPipn_Reac -> Evaluate(ke)) * (targA-targZ);
- 				    return xsec;}
+      xsec+= TMath::Max(0., fXSecPipn_Reac -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtAbs   ) {xsec = TMath::Max(0., fXSecPipd_Abs  -> Evaluate(ke)) *  targA;
-				    return xsec;}
+      return xsec;}
     else {
-     LOG("INukeData", pWARN)
+      LOG("INukeData", pWARN)
         << "Pi+'s don't have this fate: " << INukeHadroFates::AsString(fate);
-     return 0;
+      return 0;
     }
 
   } else if (hpdgc == kPdgPiM) {
     /* handle pi- */
-         if (fate == kIHNFtCEx   ) {xsec = TMath::Max(0., fXSecPipn_CEx  -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecPipp_CEx  -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+    if (fate == kIHNFtCEx   ) {xsec = TMath::Max(0., fXSecPipn_CEx  -> Evaluate(ke)) *  targZ;
+      xsec+= TMath::Max(0., fXSecPipp_CEx  -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtElas  ) {xsec = TMath::Max(0., fXSecPipn_Elas -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecPipp_Elas -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+      xsec+= TMath::Max(0., fXSecPipp_Elas -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtInelas) {xsec = TMath::Max(0., fXSecPipn_Reac -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecPipp_Reac -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+      xsec+= TMath::Max(0., fXSecPipp_Reac -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtAbs   ) {xsec = TMath::Max(0., fXSecPipd_Abs  -> Evaluate(ke)) *  targA;
-				    return xsec;}
+      return xsec;}
     else {
-     LOG("INukeData", pWARN)
+      LOG("INukeData", pWARN)
         << "Pi-'s don't have this fate: " << INukeHadroFates::AsString(fate);
-     return 0;
+      return 0;
     }
 
   } else if (hpdgc == kPdgPi0) {
     /* handle pi0 */
-         if (fate == kIHNFtCEx   ) {xsec = TMath::Max(0., fXSecPi0p_CEx  -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecPi0n_CEx  -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+    if (fate == kIHNFtCEx   ) {xsec = TMath::Max(0., fXSecPi0p_CEx  -> Evaluate(ke)) *  targZ;
+      xsec+= TMath::Max(0., fXSecPi0n_CEx  -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtElas  ) {xsec = TMath::Max(0., fXSecPi0p_Elas -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecPi0n_Elas -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+      xsec+= TMath::Max(0., fXSecPi0n_Elas -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtInelas) {xsec = TMath::Max(0., fXSecPi0p_Reac -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecPi0n_Reac -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+      xsec+= TMath::Max(0., fXSecPi0n_Reac -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtAbs   ) {xsec = TMath::Max(0., fXSecPi0d_Abs  -> Evaluate(ke)) *  targA;
-				    return xsec;}
+      return xsec;}
     else {
-     LOG("INukeData", pWARN)
+      LOG("INukeData", pWARN)
         << "Pi0's don't have this fate: " << INukeHadroFates::AsString(fate);
-     return 0;
+      return 0;
     }
 
   } else if (hpdgc == kPdgProton) {
     /* handle protons */
-      if (fate == kIHNFtElas  ) {xsec = TMath::Max(0., fXSecPp_Elas -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecPn_Elas -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+    if (fate == kIHNFtElas  ) {xsec = TMath::Max(0., fXSecPp_Elas -> Evaluate(ke)) *  targZ;
+      xsec+= TMath::Max(0., fXSecPn_Elas -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtInelas) {xsec = TMath::Max(0., fXSecPp_Reac -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecPn_Reac -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+      xsec+= TMath::Max(0., fXSecPn_Reac -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtCmp) {xsec = TMath::Max(0., fXSecPp_Cmp -> Evaluate(ke)) *  targZ;
-                                    xsec+= TMath::Max(0., fXSecPn_Cmp -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+      xsec+= TMath::Max(0., fXSecPn_Cmp -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else {
-     LOG("INukeData", pWARN)
+      LOG("INukeData", pWARN)
         << "Protons don't have this fate: " << INukeHadroFates::AsString(fate);
-     return 0;
+      return 0;
     }
 
   } else if (hpdgc == kPdgNeutron) {
     /* handle protons */
-         if (fate == kIHNFtElas  ) {xsec = TMath::Max(0., fXSecPn_Elas -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecNn_Elas -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+    if (fate == kIHNFtElas  ) {xsec = TMath::Max(0., fXSecPn_Elas -> Evaluate(ke)) *  targZ;
+      xsec+= TMath::Max(0., fXSecNn_Elas -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtInelas) {xsec = TMath::Max(0., fXSecPn_Reac -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecNn_Reac -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
+      xsec+= TMath::Max(0., fXSecNn_Reac -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else if (fate == kIHNFtCmp) {xsec = TMath::Max(0., fXSecPp_Cmp -> Evaluate(ke)) *  targZ;
-                                    xsec+= TMath::Max(0., fXSecPn_Cmp -> Evaluate(ke)) * (targA-targZ);
-                                    return xsec;}
+      xsec+= TMath::Max(0., fXSecPn_Cmp -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
     else {
-     LOG("INukeData", pWARN)
+      LOG("INukeData", pWARN)
         << "Neutrons don't have this fate: " << INukeHadroFates::AsString(fate);
-     return 0;
+      return 0;
     }
     //Adding here kaons, why elastic only on protons? hA or hN? No _Reac for kaons...
-    } else if (hpdgc == kPdgKP) {
+  } else if (hpdgc == kPdgKP) {
     /* handle K+ */
-    	if (fate == kIHNFtCEx   ) {xsec = TMath::Max(0., fXSecKpn_CEx  -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecKpn_CEx  -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
-    	else if (fate == kIHNFtElas  ) {xsec = TMath::Max(0., fXSecKpn_Elas -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecKpn_Elas -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
-    	/*else if (fate == kIHNFtAbs   ) {xsec = TMath::Max(0., fXSecKpd_Abs  -> Evaluate(ke)) *  targA;
-				    return xsec;}*/
-    	else {
-    		LOG("INukeData", pWARN)
-        	<< "K+'s don't have this fate: " << INukeHadroFates::AsString(fate);
-     	return 0;
+    if (fate == kIHNFtCEx   ) {xsec = TMath::Max(0., fXSecKpn_CEx  -> Evaluate(ke)) *  targZ;
+      xsec+= TMath::Max(0., fXSecKpn_CEx  -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
+    else if (fate == kIHNFtElas  ) {xsec = TMath::Max(0., fXSecKpn_Elas -> Evaluate(ke)) *  targZ;
+      xsec+= TMath::Max(0., fXSecKpn_Elas -> Evaluate(ke)) * (targA-targZ);
+      return xsec;}
+    /*else if (fate == kIHNFtAbs   ) {xsec = TMath::Max(0., fXSecKpd_Abs  -> Evaluate(ke)) *  targA;
+      return xsec;}*/
+    else {
+      LOG("INukeData", pWARN)
+	<< "K+'s don't have this fate: " << INukeHadroFates::AsString(fate);
+      return 0;
     }
     //------------------------------------------------
-	 /*   }  else if (hpdgc == kPdgGamma) {
-    / * handle gamma * /
+    /*   }  else if (hpdgc == kPdgGamma) {
+	 / * handle gamma * /
          if (fate == kIHNFtInelas) {xsec = TMath::Max(0., fXSecGamp_fs   -> Evaluate(ke)) *  targZ;
-	                            xsec+= TMath::Max(0., fXSecGamn_fs   -> Evaluate(ke)) * (targA-targZ);
-				    return xsec;}
-    else {
-     LOG("INukeData", pWARN)
-        << "Gamma's don't have this fate: " << INukeHadroFates::AsString(fate);
-     return 0;
-     }*/
-   }
+	 xsec+= TMath::Max(0., fXSecGamn_fs   -> Evaluate(ke)) * (targA-targZ);
+	 return xsec;}
+	 else {
+	 LOG("INukeData", pWARN)
+	 << "Gamma's don't have this fate: " << INukeHadroFates::AsString(fate);
+	 return 0;
+	 }*/
+  }
   LOG("INukeData", pWARN)
-      << "Can't handle particles with pdg code = " << hpdgc;
+    << "Can't handle particles with pdg code = " << hpdgc;
 
   return 0;
 }
 
 double INukeHadroData2019::Frac(int hpdgc, INukeFateHN_t fate, double ke, int targA, int targZ) const
 {
-// return the x-section fraction for the input fate for the particle with the
-// input pdg code at the input kinetic energy
+  // return the x-section fraction for the input fate for the particle with the
+  // input pdg code at the input kinetic energy
 
   ke = TMath::Max(fMinKinEnergy,   ke);
   ke = TMath::Min(fMaxKinEnergyHN, ke);
@@ -1654,16 +1648,16 @@ double INukeHadroData2019::Frac(int hpdgc, INukeFateHN_t fate, double ke, int ta
 
   // get max x-section
   double xsec_tot = 0;
-       if (hpdgc == kPdgPiP    ){xsec_tot = TMath::Max(0., fXSecPipp_Tot  -> Evaluate(ke)) *  targZ;
-				 xsec_tot+= TMath::Max(0., fXSecPipn_Tot  -> Evaluate(ke)) * (targA-targZ);}
+  if (hpdgc == kPdgPiP    ){xsec_tot = TMath::Max(0., fXSecPipp_Tot  -> Evaluate(ke)) *  targZ;
+    xsec_tot+= TMath::Max(0., fXSecPipn_Tot  -> Evaluate(ke)) * (targA-targZ);}
   else if (hpdgc == kPdgPiM    ){xsec_tot = TMath::Max(0., fXSecPipn_Tot  -> Evaluate(ke)) *  targZ;
-                        	 xsec_tot+= TMath::Max(0., fXSecPipp_Tot  -> Evaluate(ke)) * (targA-targZ);}
+    xsec_tot+= TMath::Max(0., fXSecPipp_Tot  -> Evaluate(ke)) * (targA-targZ);}
   else if (hpdgc == kPdgPi0    ){xsec_tot = TMath::Max(0., fXSecPi0p_Tot  -> Evaluate(ke)) *  targZ;
-                        	 xsec_tot+= TMath::Max(0., fXSecPi0n_Tot  -> Evaluate(ke)) * (targA-targZ);}
+    xsec_tot+= TMath::Max(0., fXSecPi0n_Tot  -> Evaluate(ke)) * (targA-targZ);}
   else if (hpdgc == kPdgProton ){xsec_tot = TMath::Max(0., fXSecPp_Tot    -> Evaluate(ke)) *  targZ;
-                        	 xsec_tot+= TMath::Max(0., fXSecPn_Tot    -> Evaluate(ke)) * (targA-targZ);}
+    xsec_tot+= TMath::Max(0., fXSecPn_Tot    -> Evaluate(ke)) * (targA-targZ);}
   else if (hpdgc == kPdgNeutron){xsec_tot = TMath::Max(0., fXSecPn_Tot    -> Evaluate(ke)) *  targZ;
-                        	 xsec_tot+= TMath::Max(0., fXSecNn_Tot    -> Evaluate(ke)) * (targA-targZ);}
+    xsec_tot+= TMath::Max(0., fXSecNn_Tot    -> Evaluate(ke)) * (targA-targZ);}
   else if (hpdgc == kPdgGamma  ) xsec_tot = TMath::Max(0., fXSecGamN_Tot  -> Evaluate(ke));
   else if (hpdgc == kPdgKP     ) xsec_tot = TMath::Max(0., fXSecKpN_Tot   -> Evaluate(ke));
 
@@ -1715,9 +1709,9 @@ double INukeHadroData2019::IntBounce(const GHepParticle* p, int target, int scod
   double * buff = new double[numPoints/numEnv + 1];
   double ** dist = new double*[numEnv];
   for(int ih=0;ih<numEnv;ih++)
-  {
-    dist[ih] = new double[3];
-  }
+    {
+      dist[ih] = new double[3];
+    }
 
   // Acc-Rej Sampling Method
   // -- Starting at the beginning of each envelope,
@@ -1770,7 +1764,7 @@ double INukeHadroData2019::IntBounce(const GHepParticle* p, int target, int scod
     }
   if(env==numEnv) env=numEnv - 1;
 
-while(iter)
+  while(iter)
     {
 
       // Obtain the correct x-coordinate from the random sample
@@ -1789,48 +1783,71 @@ while(iter)
 	  int pvalues=0;
 	  double points[200]={0};
 	  for(int k=0;k<NUM_POINTS;k++)
-          {
-	    points[int(k/10)]=this->XSec(p->Pdg(),target,scode,fate,ke,-1+(2.0/NUM_POINTS)*k);
-	    if(points[int(k/10)]>0) pvalues++;
-	  }
-          if(pvalues<(.05*NUM_POINTS))
-	  {
-	    // if it reaches here, one more test...if momenta of particle is
-            // extremely low, just give it an angle from a uniform distribution
-	    if(p->P4()->P()<.005) // 5 MeV
 	    {
-              val = 2*rnd->RndFsi().Rndm()-1;
-	      break;
-            }
-            else
-            {
- 	      LOG("Intranuke", pWARN) << "Hung-up in IntBounce method - Exiting";
-	      LOG("Intranuke", pWARN) << (*p);
-	      LOG("Intranuke", pWARN) << "Target: " << target << ", Scode: " << scode << ", fate: " << INukeHadroFates::AsString(fate);
-	      for(int ie=0;ie<200;ie+=10) {
-		LOG("Intranuke", pWARN)   << points[ie+0] << ", " << points[ie+1] << ", " << points[ie+2] << ", "
-		   << points[ie+3] << ", " << points[ie+4] << ", " << points[ie+5] << ", " << points[ie+6] << ", "
-					   << points[ie+7] << ", " << points[ie+8] << ", " << points[ie+9];
-	      }
-              for(int ih=0;ih<numEnv;ih++)
-              {
-                delete [] dist[ih];
-              }
-	      delete [] dist;
+	      points[int(k/10)]=this->XSec(p->Pdg(),target,scode,fate,ke,-1+(2.0/NUM_POINTS)*k);
+	      if(points[int(k/10)]>0) pvalues++;
+	    }
+          if(pvalues<(.05*NUM_POINTS))
+	    {
+	      // if it reaches here, one more test...if momenta of particle is
+	      // extremely low, just give it an angle from a uniform distribution
+	      if(p->P4()->P()<.005) // 5 MeV
+		{
+		  val = 2*rnd->RndFsi().Rndm()-1;
+		  break;
+		}
+	      else
+		{
+		  LOG("Intranuke", pWARN) << "Hung-up in IntBounce method - Exiting";
+		  LOG("Intranuke", pWARN) << (*p);
+		  LOG("Intranuke", pWARN) << "Target: " << target << ", Scode: " << scode << ", fate: " << INukeHadroFates::AsString(fate);
+		  for(int ie=0;ie<200;ie+=10) {
+		    LOG("Intranuke", pWARN)   << points[ie+0] << ", " << points[ie+1] << ", " << points[ie+2] << ", "
+					      << points[ie+3] << ", " << points[ie+4] << ", " << points[ie+5] << ", " << points[ie+6] << ", "
+					      << points[ie+7] << ", " << points[ie+8] << ", " << points[ie+9];
+		  }
+		  for(int ih=0;ih<numEnv;ih++)
+		    {
+		      delete [] dist[ih];
+		    }
+		  delete [] dist;
 
-	      return -2.;
-            }
-          }
+		  return -2.;
+		}
+	    }
 	}
       iter++;
     }
 
   for(int ih=0;ih<numEnv;ih++)
-  {
-    delete [] dist[ih];
-  }
+    {
+      delete [] dist[ih];
+    }
   delete [] dist;
 
   return val;
 }
 //___________________________________________________________________________
+void  INukeHadroData2019::Configure (const Registry & config) {
+
+  Algorithm::Configure(config);
+  
+  // this is loads of things we need to reload every time that we reconfigure as a function
+  // of reweight
+  // Find a way to not force the loading all the time
+
+  if ( ! fIsConfigured ) this->LoadCrossSections();
+
+}
+//___________________________________________________________________________
+void INukeHadroData2019::Configure (string param_set) {
+
+  Algorithm::Configure( param_set );
+
+  // this is loads of things we need to reload every time that we reconfigure as a function
+  // of reweight
+  // Find a way to not force the loading all the time
+  
+  if ( ! fIsConfigured ) this->LoadCrossSections();
+  
+}

@@ -10,32 +10,31 @@ Algorithm Configurable Parameters:
 .......................................................................................................................
 Name                Type    Opt   Comment                                                     Default
 .......................................................................................................................
-test-mode           bool    Yes   enables modifications for the pitest mode                   false
-R0                  double  Yes   effective nucleus size Ro in fm                             GPL NUCL-R0
-NR                  double  Yes   param multiplying the nuclear radius determining how        GPL NUCL-NR
-                                  far beyond the nuclear boundary particles are tracked
-mode                string  Yes   intranuke mode                                              GPL INUKE-Mode
-NumRmvE             double  Yes   binding energy to subtract from cascade nucleons (GeV)      GPL INUKE-NucRemovalE
-HadStep             double  Yes   step size in fm                                             GPL INUKE-HadStep
-DelRPion            double  Yes   mult. factor for pi de-Broglie wavelength determining       GPL INUKE-DelRPion
-                                  how muct to increase the nuclear radius
-DelRNucleon         double  Yes   mult. factor for nucleon de-Broglie wavelength determining  GPL INUKE-DelRNucleon
-                                  how muct to increase the nuclear radius
+                        
 -->
 
   <param_set name="Default"> 
+
   </param_set>
 
-  <param_set name="hA-TestMode"> 
-      <param type="bool" name="test-mode"> true </param>
+  <param_set name="Historical"> 
+    <param type="string" name="datafile_NN">   tot_xsec/historical/intranuke-xsections-NN2014.dat    </param>
+    <param type="string" name="datafile_pipN"> tot_xsec/historical/intranuke-xsections-pi+N.dat      </param>
+    <param type="string" name="datafile_pi0N"> tot_xsec/historical/intranuke-xsections-pi0N.dat      </param>
+    <param type="string" name="datafile_NA">   tot_xsec/historical/intranuke-fractions-NA2016.dat    </param>
+    <param type="string" name="datafile_KA">   tot_xsec/historical/intranuke-fractions-KA.dat        </param>
+    <param type="string" name="datafile_gamN"> tot_xsec/historical/intranuke-xsections-gamN.dat      </param>
+    <param type="string" name="datafile_kN">   tot_xsec/historical/intranuke-xsections-kaonN2018.dat </param>
   </param_set>
 
-  <param_set name="hA"> 
-      <param type="string" name="mode"> hA </param>
-  </param_set>
-
-  <param_set name="hN"> 
-      <param type="string" name="mode"> hN </param>
+  <param_set name="2019"> 
+    <param type="string" name="datafile_NN">   tot_xsec/2019/intranuke-xsections-NN2014.dat    </param>
+    <param type="string" name="datafile_pipN"> tot_xsec/2019/intranuke-xsections-pi+N.dat      </param>
+    <param type="string" name="datafile_pi0N"> tot_xsec/2019/intranuke-xsections-pi0N.dat      </param>
+    <param type="string" name="datafile_NA">   tot_xsec/2019/intranuke-fractions-NA2016.dat    </param>
+    <param type="string" name="datafile_KA">   tot_xsec/2019/intranuke-fractions-KA.dat        </param>
+    <param type="string" name="datafile_gamN"> tot_xsec/2019/intranuke-xsections-gamN.dat      </param>
+    <param type="string" name="datafile_kN">   tot_xsec/2019/intranuke-xsections-kaonN2018.dat </param>
   </param_set>
 
 </alg_conf>
