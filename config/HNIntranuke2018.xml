@@ -40,6 +40,9 @@ XsecNNCorr          bool    Yes   nuclear medium correction for NN cross section
 	  <param type="alg"    name="NuclearModel"> genie::FGMBodekRitchie/Default </param>
     -->
 
+    <param type="alg"    name="Dataset">   genie::INukeHadroData2019/Historical  </param>
+
+
     <param type="bool" name="HNINUKE-UseOset"> true  </param>
     <param type="bool" name="HNINUKE-AltOset"> false </param>
     <param type="bool" name="INUKE-XsecNNCorr"> true </param>
@@ -60,6 +63,15 @@ XsecNNCorr          bool    Yes   nuclear medium correction for NN cross section
    <param type="double" name="HNINUKE-DelRNucleon">     0.0   </param>
 
   </param_set>
+
+
+  <param_set name="2019"> 
+
+    <param type="alg"    name="Dataset">   genie::INukeHadroData2019/2019  </param>
+
+  </param_set>
+
+
 <!--
   <param_set name="Default"> 
     <param type="bool" name="HNINUKE-UseOset"> false  </param>

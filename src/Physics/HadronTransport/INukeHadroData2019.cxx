@@ -1666,7 +1666,7 @@ double INukeHadroData2019::Frac(int hpdgc, INukeFateHN_t fate, double ke, int ta
   return frac;
 }
 //____________________________________________________________________________
-double INukeHadroData2019::IntBounce(const GHepParticle* p, int target, int scode, INukeFateHN_t fate)
+double INukeHadroData2019::IntBounce(const GHepParticle* p, int target, int scode, INukeFateHN_t fate) const
 {
   // This method returns a random cos(ang) according to a distribution
   // based upon the particle and fate. The sampling uses the
