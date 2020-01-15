@@ -65,8 +65,13 @@ double INukeHadroData2019::fMinKinEnergy   =    1.0; // MeV
 double INukeHadroData2019::fMaxKinEnergyHA =  999.0; // MeV
 double INukeHadroData2019::fMaxKinEnergyHN = 1799.0; // MeV
 //____________________________________________________________________________
-INukeHadroData2019::INukeHadroData2019() : Algorithm( "INukeHadroData2019") , 
+INukeHadroData2019::INukeHadroData2019() : Algorithm( "genie::INukeHadroData2019") , 
 					   fIsConfigured( false ) 
+{ ; } 
+
+//____________________________________________________________________________
+INukeHadroData2019::INukeHadroData2019( string config ) : Algorithm( "genie::INukeHadroData2019", config ) , 
+							  fIsConfigured( false ) 
 { ; } 
 
 //____________________________________________________________________________

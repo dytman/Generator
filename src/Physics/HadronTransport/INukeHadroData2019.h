@@ -57,6 +57,7 @@ namespace genie {
   public:
  
     INukeHadroData2019();
+    INukeHadroData2019( string config );
 
     // override the Algorithm::Configure methods to load configuration
     // data to protected data members
