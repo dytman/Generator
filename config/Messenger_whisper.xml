@@ -21,9 +21,7 @@
     same stream is listed twice with conflicting priority then the
     one found last is used
    -->
-  
-  <priority msgstream="ResonanceDecay">        FATAL </priority>
-  <priority msgstream="Pythia6Decay">          FATAL </priority>
+
   <priority msgstream="Messenger">             FATAL </priority>
   <priority msgstream="AhrensNCEL">            FATAL </priority>
   <!-- EDIT: add notification for DM EL algorithm -->
@@ -40,6 +38,7 @@
   <priority msgstream="BardinIMD">             FATAL </priority>
   <priority msgstream="BaryonResList">         FATAL </priority>
   <priority msgstream="BaseHad">               FATAL </priority>
+  <priority msgstream="BertuzzoDNuCOH">        FATAL </priority>
   <priority msgstream="BSKLNBaseRESPXSec2014"> FATAL </priority>
   <priority msgstream="BreitWignet">           FATAL </priority>
   <priority msgstream="Bardin">                FATAL </priority>
@@ -51,11 +50,14 @@
   <priority msgstream="CharmHad">              FATAL </priority>
   <priority msgstream="CFracTab">              FATAL </priority>
   <priority msgstream="CEvNS">                 FATAL </priority>
+  <priority msgstream="COHDNu">                FATAL </priority>
+  <priority msgstream="COHDNuXSec">            FATAL </priority>
   <priority msgstream="COHXSec">               FATAL </priority>
   <priority msgstream="COHXSecAR">             FATAL </priority>
   <priority msgstream="CLAP">                  FATAL </priority>
   <priority msgstream="COHHadronicVtx">        FATAL </priority>
   <priority msgstream="COHKinematics">         FATAL </priority>
+  <priority msgstream="DarkSectorDecayer">     FATAL </priority>
   <priority msgstream="DFRHadronicVtx">        FATAL </priority>
   <priority msgstream="DFRKinematics">         FATAL </priority>
   <priority msgstream="Decay">                 FATAL </priority>
@@ -79,6 +81,7 @@
   <priority msgstream="EVGChain">              FATAL </priority>
   <priority msgstream="EvGenListAssembler">    FATAL </priority>
   <priority msgstream="ELFormFactors">         FATAL </priority>
+  <priority msgstream="EngelFormFactor">       FATAL </priority>
   <priority msgstream="FermiMover">            FATAL </priority>
   <priority msgstream="FermiP">                FATAL </priority>
   <priority msgstream="Flux">                  FATAL </priority>
@@ -92,6 +95,7 @@
   <priority msgstream="GROOTGeom">             FATAL </priority>
   <priority msgstream="GHEP">                  FATAL </priority>
   <priority msgstream="GHepParticle">          FATAL </priority>
+  <priority msgstream="GHepUtils">             FATAL </priority>
   <priority msgstream="GuiUtils">              FATAL </priority>
   <priority msgstream="GRV98LO">               FATAL </priority>
   <priority msgstream="GXSecFunc">             FATAL </priority>
@@ -121,6 +125,8 @@
   <priority msgstream="INukeUtils">            FATAL </priority>
   <priority msgstream="INukeUtils2018">        FATAL </priority>
   <priority msgstream="INukeUtils2019">        FATAL </priority>
+  <priority msgstream="HINCLCascadeIntranuke"> FATAL </priority>
+  <priority msgstream="HG4BertCascIntranuke">  FATAL </priority>
   <priority msgstream="ISApp">                 FATAL </priority>
   <priority msgstream="IntGenMap">             FATAL </priority>
   <priority msgstream="KNOHad">                FATAL </priority>
@@ -190,6 +196,20 @@
   <priority msgstream="XSecBase">              FATAL </priority>
   <priority msgstream="XSecAlgMap">            FATAL </priority>
   <priority msgstream="XSecSplLst">            FATAL </priority>
+  <priority msgstream="GLRESPXSec">            FATAL </priority>
+  <priority msgstream="GLRESGenerator">        FATAL </priority>
+  <priority msgstream="HENuElPXSec">           FATAL </priority>
+  <priority msgstream="HENuElGenerator">       FATAL </priority>
+  <priority msgstream="PhotonRESPXSec">        FATAL </priority>
+  <priority msgstream="PhotonRESGenerator">    FATAL </priority>
+  <priority msgstream="PhotonCOHPXSec">        FATAL </priority>
+  <priority msgstream="PhotonCOHGenerator">    FATAL </priority>
+  <priority msgstream="HEDISXSec">             FATAL </priority>
+  <priority msgstream="HEDISPXSec">            FATAL </priority>
+  <priority msgstream="HEDISGenerator">        FATAL </priority>
+  <priority msgstream="HEDISKinematics">       FATAL </priority>
+  <priority msgstream="HEDISStrucFunc">        FATAL </priority>
+  <priority msgstream="LeptoHad">              FATAL </priority>
 
   <priority msgstream="gevgen">              FATAL </priority>
   <priority msgstream="gevgen_dm">           FATAL </priority>
@@ -205,5 +225,8 @@
   <priority msgstream="gntpc">               FATAL </priority>
   <priority msgstream="gmkspl">              FATAL </priority>
   <priority msgstream="gmkspl_dm">           FATAL </priority>
+  <priority msgstream="gcalchedisdiffxsec">  FATAL </priority>
+  <priority msgstream="gmkhedissf">          FATAL </priority>
+  <priority msgstream="gmkphotonsf">         FATAL </priority>
 
 </messenger_config>

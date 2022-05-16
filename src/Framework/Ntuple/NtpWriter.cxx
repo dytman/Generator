@@ -1,24 +1,10 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2019, The GENIE Collaboration
+ Copyright (c) 2003-2022, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
- or see $GENIE/LICENSE
 
- Author: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-         University of Liverpool & STFC Rutherford Appleton Lab
-
- For the class documentation see the corresponding header file.
-
- Important revisions after version 2.0.0 :
- @ Feb 07, 2008 - CA
-   Made event branch a priv data member and modified code accordingly.
-   Added method to hand over the event tree so that additional user-defined
-   branches (eg flux info) may be added.
- @ Mar 26, 2010 - CA
-   Added CustomizeFilename() and CustomizeFilenamePrefix() to allow the use
-   to customize either the entire output name or just the prefix before the
-   run number.
-
+ Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+ University of Liverpool & STFC Rutherford Appleton Laboratory
 */
 //____________________________________________________________________________
 
@@ -46,9 +32,10 @@ using std::ostringstream;
 using namespace genie;
 
 //____________________________________________________________________________
-NtpWriter::NtpWriter(NtpMCFormat_t fmt, Long_t runnu) :
+NtpWriter::NtpWriter(NtpMCFormat_t fmt, Long_t runnu, Long_t seed) :
 fNtpFormat(fmt),
 fRunNu(runnu),
+fRunSeed(seed),
 fOutFile(0),
 fOutTree(0),
 fEventBranch(0),
@@ -228,8 +215,9 @@ void NtpWriter::CreateTreeHeader(void)
 
   fNtpMCTreeHeader = new NtpMCTreeHeader;
 
-  fNtpMCTreeHeader->format = fNtpFormat;
-  fNtpMCTreeHeader->runnu  = fRunNu;
+  fNtpMCTreeHeader->format  = fNtpFormat;
+  fNtpMCTreeHeader->runnu   = fRunNu;
+  fNtpMCTreeHeader->runseed = fRunSeed;
 
   LOG("Ntp", pINFO) << *fNtpMCTreeHeader;
 }

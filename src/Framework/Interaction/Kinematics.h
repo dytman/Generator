@@ -5,14 +5,13 @@
 
 \brief    Generated/set kinematical variables for an event
 
-\author   Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-          University of Liverpool & STFC Rutherford Appleton Lab
+\author   Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+          University of Liverpool & STFC Rutherford Appleton Laboratory
 
 \created  May 08, 2004
 
-\cpright  Copyright (c) 2003-2019, The GENIE Collaboration
-          For the full text of the license visit http://copyright.genie-mc.org
-          or see $GENIE/LICENSE
+\cpright  Copyright (c) 2003-2022, The GENIE Collaboration
+          For the full text of the license visit http://copyright.genie-mc.org          
 */
 //____________________________________________________________________________
 
@@ -62,7 +61,7 @@ public:
   double Log10y  (bool selected=false) const;
   double Log10Q2 (bool selected=false) const;
   double Log10W  (bool selected=false) const;
-
+  
   const TLorentzVector & FSLeptonP4(void) const { return *fP4Fsl;     }
   const TLorentzVector & HadSystP4 (void) const { return *fP4HadSyst; }
 
@@ -95,8 +94,8 @@ public:
 
 private:
 
-  void Init    (void); ///< initialize 
-  void CleanUp (void); ///< clean-up 
+  void Init    (void); ///< initialize
+  void CleanUp (void); ///< clean-up
 
   //-- Private data members
 

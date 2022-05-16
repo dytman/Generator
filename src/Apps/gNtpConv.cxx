@@ -106,14 +106,14 @@
                 t2k_rootracker format. 
                 The output file is named myfile.gtrac.root
 
-\author  Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-         University of Liverpool & STFC Rutherford Appleton Lab
+\author  Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+ University of Liverpool & STFC Rutherford Appleton Laboratory
 
 \created September 23, 2005
 
-\cpright Copyright (c) 2003-2019, The GENIE Collaboration
+\cpright Copyright (c) 2003-2022, The GENIE Collaboration
          For the full text of the license visit http://copyright.genie-mc.org
-         or see $GENIE/LICENSE
+         
 */
 //_____________________________________________________________________________________________
 
@@ -398,6 +398,10 @@ void ConvertToGST(void)
                                  //  - ((e/h) * energy)   for pi0, gamma, e-, e+, where e/h is set to 1.3
                                  //  - (kinetic energy) for other particles
 
+  Double_t  brXSec;              // the event cross section in 1E-38cm^2
+  Double_t  brDXSec;             // is the differential cross section for the selected in 1E-38cm^2/{K^n}
+  UInt_t    brKPS;               // phase space that the xsec has been evaluated into
+                              
   // Open output file & create output summary tree & create the tree branches
   //
   LOG("gntpc", pNOTICE) 
@@ -502,6 +506,9 @@ void ConvertToGST(void)
   s_tree->Branch("vtxt",         &brVtxT,	    "vtxt/D"        );
   s_tree->Branch("sumKEf",       &brSumKEf,	    "sumKEf/D"      );
   s_tree->Branch("calresp0",     &brCalResp0,	    "calresp0/D"    );
+  s_tree->Branch("XSec",         &brXSec,	    "XSec/D"    );
+  s_tree->Branch("DXSec",         &brDXSec,	    "DXSec/D"    );
+  s_tree->Branch("KPS",          &brKPS,	    "KPS/i"    );
 
   // Open the ROOT file and get the TTree & its header
   TFile fin(gOptInpFileName.c_str(),"READ");
@@ -606,6 +613,7 @@ void ConvertToGST(void)
     bool is_res    = proc_info.IsResonant();
     bool is_dis    = proc_info.IsDeepInelastic();
     bool is_coh    = proc_info.IsCoherentProduction();
+    bool is_coh_el = proc_info.IsCoherentElastic();
     bool is_dfr    = proc_info.IsDiffractive();
     bool is_imd    = proc_info.IsInverseMuDecay();
     bool is_imdanh = proc_info.IsIMDAnnihilation();
@@ -618,7 +626,7 @@ void ConvertToGST(void)
     bool is_amnugamma = proc_info.IsAMNuGamma();
 
     if (!hitnucl && neutrino) {
-        assert(is_coh || is_imd || is_imdanh || is_nuel | is_amnugamma);
+        assert(is_coh || is_imd || is_imdanh || is_nuel | is_amnugamma || is_coh_el);
     }
   
     // Hit quark - set only for DIS events
@@ -747,11 +755,13 @@ void ConvertToGST(void)
       // now add pi0's that were decayed as short lived particles
       else if(pdgc == kPdgPi0){
 	int ifd = p->FirstDaughter();
-	int fd_pdgc = event.Particle(ifd)->Pdg();
-	// just require that first daughter is one of gamma, e+ or e-  
-	if(fd_pdgc == kPdgGamma || fd_pdgc == kPdgElectron || fd_pdgc == kPdgPositron){
-	  final_had_syst.push_back(ip);
-	}
+        if ( ifd != -1 ) {
+          int fd_pdgc = event.Particle(ifd)->Pdg();
+          // just require that first daughter is one of gamma, e+ or e-  
+          if(fd_pdgc == kPdgGamma || fd_pdgc == kPdgElectron || fd_pdgc == kPdgPositron){
+            final_had_syst.push_back(ip);
+          }
+        }
       }
     }//particle-loop
 
@@ -932,6 +942,12 @@ void ConvertToGST(void)
     brPzl        = k2.Pz();      
     brPl         = k2.P();
     brCosthl     = TMath::Cos( k2.Vect().Angle(k1.Vect()) );
+
+    // XSec Info
+
+    brXSec  = event.XSec()*(1E+38/units::cm2);
+    brDXSec = event.DiffXSec()*(1E+38/units::cm2);
+    brKPS   = event.DiffXSecVars();
 
     // Primary hadronic system (from primary neutrino interaction, before FSI)
     brNiP        = 0;

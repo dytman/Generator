@@ -1,7 +1,7 @@
 # -*-mode: Makefile-*-
 # Make.target for GENIE Neutrino Generator
 #
-# Author: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
+# Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
 #
 
 #
@@ -38,7 +38,7 @@ PACKAGE_ROOTMAP_WITH_PATH := $(GENIE_LIB_PATH)/$(PACKAGE_ROOTMAP)
 
 LIB_DEPEND=
 ifeq ($(strip $(DICTIONARY)),undefined)
-  LIB_DEPEND = $(PACKAGE_OBJECTS) 
+  LIB_DEPEND = $(PACKAGE_OBJECTS)
 else
   LIB_DEPEND = $(PACKAGE_ALL_OBJECTS)
 endif
@@ -51,10 +51,7 @@ $(DICTIONARY).cc: LinkDef.h $(DICTGEN_OBJECTS)
 	$(RM) $(DICTIONARY).*
 	@echo "[package: $(PACKAGE)] Generating ROOT dictionary ..."
 #	rootcint -f $(DICTIONARY).cc -c $(ROOT_DICT_GEN_INCLUDES) $(DICTGEN_HEADERS) LinkDef.h
-ifeq ($(ROOT_MAJOR),5)
-        # add -p flag to use cpp rather than CINT
-	  rootcint -f $(DICTIONARY).cc -c -p $(ROOT_DICT_GEN_INCLUDES) $(DICTGEN_HEADERS) LinkDef.h
-else
+ifeq ($(ROOT_MAJOR),6)
         # to make pcm relocatable we have to set it to strip these off
         # sub-dirs Types & Interfaces don't have dictionaries, made as part of Nuclear
         # so we have to explicitly (in case of Nuclear, no harm doing for rest)
@@ -73,13 +70,11 @@ else
                   -rmf $(PACKAGE_ROOTMAP) \
                   $(ROOT_DICT_GEN_INCLUDES) $(DICTGEN_HEADERS) LinkDef.h
 # clean rootmap output up a bit ... (magic?)
-# -e "s/\.dylib\.so/\.dylib/g" 
+# -e "s/\.dylib\.so/\.dylib/g"
 #   order matters here
 	  sed -i.bak \
-                     -e "s/_rdict.pcm/.so/g"  \
+	             -e "s/_rdict.pcm/.so/g"  \
 	             -e "s%^header *%header $(PACKAGE)/%g" \
-                     -e "s%Nuclear/NuclearModel.h%Types/NuclearModel.h%g" \
-                     -e "s%Nuclear/NuclearModelI.h%Interfaces/NuclearModelI.h%g" \
 	             -e "s%$(GENIE_LIB_PATH)/%%g" \
 	     $(PACKAGE_ROOTMAP)
 endif
@@ -106,7 +101,6 @@ ifeq ($(strip $(IS_MACOSX)),YES)
 	$(SYMLINK) $(PACKAGE_LIB) $(PACKAGE_LIBMACLINK_WITH_PATH)
 endif
 
-
 $(PACKAGE_LIBNOVRS_WITH_PATH): $(PACKAGE_LIB_WITH_PATH)
 	@echo "[package: $(PACKAGE)] Creating symbolic link to shared library ..."
 ifeq ($(strip $(GOPT_ENABLE_DYLIBVERSION)),YES)
@@ -116,7 +110,6 @@ endif
 #
 #
 lib-link: $(PACKAGE_LIBNOVRS_WITH_PATH) $(PACKAGE_LIBMACLINK_WITH_PATH)
-
 
 #
 #
@@ -131,10 +124,12 @@ install-lib:
 ifeq ($(strip $(GOPT_ENABLE_DYLIBVERSION)),YES)
 	[ ! -f $(PACKAGE_LIB_WITH_PATH) ] || $(SYMLINK) $(PACKAGE_LIB) $(PACKAGE_LIBNOVRS_WITH_IPATH)
 endif
+
 ifeq ($(ROOT_MAJOR),6)
 	[ ! -f $(PACKAGE_PCM_WITH_PATH) ]     || $(COPY) $(PACKAGE_PCM_WITH_PATH) $(GENIE_LIB_INSTALLATION_PATH)
 	[ ! -f $(PACKAGE_ROOTMAP_WITH_PATH) ] || $(COPY) $(PACKAGE_ROOTMAP_WITH_PATH) $(GENIE_LIB_INSTALLATION_PATH)
 endif
+
 ifeq ($(strip $(ARCH)),macosx)
 	[ ! -f $(PACKAGE_LIB_WITH_PATH) ] || $(SYMLINK) $(PACKAGE_LIB) $(PACKAGE_LIBMACLINK_WITH_IPATH)
 endif

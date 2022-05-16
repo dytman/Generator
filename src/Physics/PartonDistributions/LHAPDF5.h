@@ -6,14 +6,13 @@
 \brief    LHAPDF5 library interface.
           Concrete implementation of the PDFModelI interface.
 
-\author   Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-          University of Liverpool & STFC Rutherford Appleton Lab
+\author   Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+          University of Liverpool & STFC Rutherford Appleton Laboratory
 
 \created  June 06, 2004
 
-\cpright  Copyright (c) 2003-2019, The GENIE Collaboration
-          For the full text of the license visit http://copyright.genie-mc.org
-          or see $GENIE/LICENSE
+\cpright  Copyright (c) 2003-2022, The GENIE Collaboration
+          For the full text of the license visit http://copyright.genie-mc.org          
 */
 //____________________________________________________________________________
 
@@ -21,6 +20,8 @@
 #define _LHAPDF5_H_
 
 #include "Physics/PartonDistributions/PDFModelI.h"
+#include <string>
+using std::string;
 
 namespace genie {
 
@@ -45,7 +46,7 @@ public:
   double Gluon       (double x, double Q2) const;
   PDF_t  AllPDFs     (double x, double Q2) const;
 
-  // Override the default "Confugure" implementation 
+  // Override the default "Confugure" implementation
   // of the Algorithm interface
 
   void Configure (const Registry & config);

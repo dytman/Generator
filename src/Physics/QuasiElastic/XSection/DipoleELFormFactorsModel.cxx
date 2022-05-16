@@ -1,18 +1,10 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2019, The GENIE Collaboration
+ Copyright (c) 2003-2022, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
- or see $GENIE/LICENSE
 
- Author: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-         University of Liverpool & STFC Rutherford Appleton Lab 
-
- For the class documentation see the corresponding header file.
-
- Important revisions after version 2.0.0 :
- @ Sep 19, 2009 - CA
-   Moved into the ElFF package from its previous location               
-
+ Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+ University of Liverpool & STFC Rutherford Appleton Laboratory
 */
 //____________________________________________________________________________
 
@@ -93,7 +85,7 @@ void DipoleELFormFactorsModel::Configure(string param_set)
 void DipoleELFormFactorsModel::LoadConfig(void)
 {
   // vector mass
-  GetParam( "EL-Mv", fMv ) ;
+  GetParam( "QEL-Mv", fMv ) ;
   fMv2 = TMath::Power(fMv,2);
 
   // anomalous magnetic moments
@@ -101,4 +93,3 @@ void DipoleELFormFactorsModel::LoadConfig(void)
   GetParam( "AnomMagnMoment-N", fMuN ) ;
 }
 //____________________________________________________________________________
-

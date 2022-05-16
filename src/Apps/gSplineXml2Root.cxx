@@ -8,7 +8,7 @@
 
          Syntax :
            gspl2root -f xml_file -p nu -t tgt [-e emax]
-                     [-o root_file] [-w] [-k]
+                     [-o root_file] [-w] [-k] [-l]
                      [--message-thresholds xml_file]
                      [--event-generator-list list_name]
 
@@ -22,11 +22,13 @@
            -t
               the target pdg code (format: 10LZZZAAAI)
            -e
-              the maximum energy (in generated plots -- use it to zoom at low E)
+              the minimum and maximum energy (in generated plots -- use it to zoom at low E)
            -o
               output ROOT file name
            -w
               write out plots in a postscipt file
+           -l
+              energy bins in log10 scale
            -k
               keep spline knot points  (not yet implemented).
            --message-thresholds
@@ -67,12 +69,12 @@
 
            See the User Manual for more details.
 
-\author  Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-         University of Liverpool & STFC Rutherford Appleton Lab
+\author  Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+ University of Liverpool & STFC Rutherford Appleton Laboratory
 
 \created December 15, 2005
 
-\cpright Copyright (c) 2003-2019, The GENIE Collaboration
+\cpright Copyright (c) 2003-2022, The GENIE Collaboration
          For the full text of the license visit http://copyright.genie-mc.org
 */
 //____________________________________________________________________________
@@ -98,6 +100,7 @@
 #include "Framework/ParticleData/BaryonResUtils.h"
 #include "Framework/Conventions/XmlParserStatus.h"
 #include "Framework/Conventions/Units.h"
+#include "Framework/Conventions/Controls.h"
 #include "Framework/EventGen/InteractionList.h"
 #include "Framework/EventGen/GEVGDriver.h"
 #include "Framework/Interaction/Interaction.h"
@@ -112,6 +115,9 @@
 #include "Framework/Utils/XSecSplineList.h"
 #include "Framework/Utils/StringUtils.h"
 #include "Framework/Utils/CmdLnArgParser.h"
+#include "Framework/Registry/Registry.h"
+#include "Framework/Algorithm/AlgConfigPool.h"
+
 
 using std::string;
 using std::vector;
@@ -133,7 +139,6 @@ PDGCodeList GetPDGCodeListFromString(std::string s);
 //User-specified options:
 string gOptXMLFilename;  // input XML filename
 string gOptROOTFilename; // output ROOT filename
-double gOptNuEnergy;     // Ev(max)
 PDGCodeList gOptProbePdgList;  // list of probe PDG codes
 PDGCodeList gOptTgtPdgList;    // list of target PDG codes
 int    gOptProbePdgCode; // probe PDG code (currently being processed)
@@ -144,10 +149,10 @@ bool   gWriteOutPlots;   // write out a postscript file with plots
 //Globals & constants
 double gEmin;
 double gEmax;
+bool gInlogE;
 int    kNP       = 300;
 int    kNSplineP = 1000;
 const int    kPsType   = 111;  // ps type: portrait
-const double kEmin     = 0.01; // minimum energy in plots (GeV)
 
 //____________________________________________________________________________
 int main(int argc, char ** argv)
@@ -525,7 +530,11 @@ void SaveGraphsToRootFile(void)
 
   //-- check whether the splines will be saved in a ROOT file - if not, exit now
   bool save_in_root = gOptROOTFilename.size()>0;
-  if(!save_in_root) return;
+  if(!save_in_root) {
+
+    LOG("gspl2root", pWARN) << "No Interaction  List available" ;
+    return;
+  }
 
   //-- get pdglibrary for mapping pdg codes to names
   PDGLibrary * pdglib = PDGLibrary::Instance();
@@ -567,9 +576,9 @@ void SaveGraphsToRootFile(void)
   topdir = froot->mkdir(dptr.str().c_str(),dtitle.str().c_str());
   topdir->cd();
 
-  double   de = (gEmax-gEmin)/(kNSplineP-1);
+  double   de = (gInlogE) ? (TMath::Log(gEmax)-TMath::Log(gEmin))/(kNSplineP-1) : (gEmax-gEmin)/(kNSplineP-1);
   double * e  = new double[kNSplineP];
-  for(int i=0; i<kNSplineP; i++) {  e[i]  = gEmin + i*de; }
+  for(int i=0; i<kNSplineP; i++) {  e[i]  = (gInlogE) ? TMath::Exp(TMath::Log(gEmin) + i*de) : gEmin + i*de; }
 
   double * xs = new double[kNSplineP];
 
@@ -592,8 +601,8 @@ void SaveGraphsToRootFile(void)
     else if (proc.IsResonant()         ) { title << "res";   }
     else if (proc.IsDeepInelastic()    ) { title << "dis";   }
     else if (proc.IsDiffractive()      ) { title << "dfr";   }
-    else if (proc.IsCoherentProduction() ) { 
-      title << "coh"; 
+    else if (proc.IsCoherentProduction() ) {
+      title << "coh";
       if      ( xcls.NSingleGammas() > 0 ) title << "_gamma" ;
       else if ( xcls.NPions() > 0 )        title << "_pion"  ;
       else if ( xcls.NRhos() > 0 )         title << "_rho"   ;
@@ -603,13 +612,23 @@ void SaveGraphsToRootFile(void)
     else if (proc.IsInverseMuDecay()   ) { title << "imd";   }
     else if (proc.IsIMDAnnihilation()  ) { title << "imdanh";}
     else if (proc.IsNuElectronElastic()) { title << "ve";    }
-    else                                 { continue;         }
-
+    else if (proc.IsGlashowResonance() ) { title << "glres"; }
+    else if (proc.IsPhotonResonance() )  { title << "phres"; }
+    else if (proc.IsPhotonCoherent() )   { title << "phcoh"; }
+    else                                 { 
+      LOG("gspl2root", pWARN) << "Process " << proc
+			      << " scattering type not recognised: spline not added" ;
+      continue;         }
+    
     if      (proc.IsWeakCC())  { title << "_cc";      }
     else if (proc.IsWeakNC())  { title << "_nc";      }
     else if (proc.IsWeakMix()) { title << "_ccncmix"; }
     else if (proc.IsEM()    )  { title << "_em";      }
-    else                       { continue;            }
+    else if (proc.IsDarkNeutralCurrent() )  { title << "_dark";  }
+    else                       {
+      LOG("gspl2root", pWARN) << "Process " << proc
+                              << " interaction type has not recongnised: spline not added " ;
+      continue;            }
 
     if(tgt.HitNucIsSet()) {
       int hitnuc = tgt.HitNucPdg();
@@ -636,10 +655,12 @@ void SaveGraphsToRootFile(void)
         else if ( pdg::IsDQuark(qrkpdg)     ) { title << "_d";    }
         else if ( pdg::IsSQuark(qrkpdg)     ) { title << "_s";    }
         else if ( pdg::IsCQuark(qrkpdg)     ) { title << "_c";    }
+        else if ( pdg::IsBQuark(qrkpdg)     ) { title << "_b";    }
         else if ( pdg::IsAntiUQuark(qrkpdg) ) { title << "_ubar"; }
         else if ( pdg::IsAntiDQuark(qrkpdg) ) { title << "_dbar"; }
         else if ( pdg::IsAntiSQuark(qrkpdg) ) { title << "_sbar"; }
         else if ( pdg::IsAntiCQuark(qrkpdg) ) { title << "_cbar"; }
+        else if ( pdg::IsAntiBQuark(qrkpdg) ) { title << "_bbar"; }
 
         if(insea) { title << "sea"; }
         else      { title << "val"; }
@@ -661,6 +682,29 @@ void SaveGraphsToRootFile(void)
     if(xcls.IsCharmEvent()) {
         title << "_charm";
         if(!xcls.IsInclusiveCharm()) { title << xcls.CharmHadronPdg(); }
+    }
+
+    if(xcls.IsFinalQuarkEvent()) {
+        int  qrkpdg = xcls.FinalQuarkPdg();
+        if      ( pdg::IsUQuark(qrkpdg)     ) { title << "_u";    }
+        else if ( pdg::IsDQuark(qrkpdg)     ) { title << "_d";    }
+        else if ( pdg::IsSQuark(qrkpdg)     ) { title << "_s";    }
+        else if ( pdg::IsCQuark(qrkpdg)     ) { title << "_c";    }
+        else if ( pdg::IsBQuark(qrkpdg)     ) { title << "_b";    }
+        else if ( pdg::IsTQuark(qrkpdg)     ) { title << "_t";    }
+        else if ( pdg::IsAntiUQuark(qrkpdg) ) { title << "_ubar"; }
+        else if ( pdg::IsAntiDQuark(qrkpdg) ) { title << "_dbar"; }
+        else if ( pdg::IsAntiSQuark(qrkpdg) ) { title << "_sbar"; }
+        else if ( pdg::IsAntiCQuark(qrkpdg) ) { title << "_cbar"; }
+        else if ( pdg::IsAntiBQuark(qrkpdg) ) { title << "_bbar"; }
+        else if ( pdg::IsAntiTQuark(qrkpdg) ) { title << "_tbar"; }
+    }
+    if(xcls.IsFinalLeptonEvent()) {
+        int  leppdg = TMath::Abs(xcls.FinalLeptonPdg());
+        if      ( pdg::IsMuon(leppdg)     ) { title << "_mu";     }
+        else if ( pdg::IsElectron(leppdg) ) { title << "_e";      }
+        else if ( pdg::IsTau(leppdg)      ) { title << "_tau";    }
+        else if ( pdg::IsPion(leppdg)     ) { title << "_had";    }
     }
 
     const Spline * spl = evg_driver.XSecSpline(interaction);
@@ -751,11 +795,15 @@ void SaveGraphsToRootFile(void)
     // add-up all dis channels
     //
 
+    double * xsdiscc  = new double[kNSplineP];
+    double * xsdisnc  = new double[kNSplineP];
     double * xsdisccp = new double[kNSplineP];
     double * xsdisccn = new double[kNSplineP];
     double * xsdisncp = new double[kNSplineP];
     double * xsdisncn = new double[kNSplineP];
     for(int i=0; i<kNSplineP; i++) {
+       xsdiscc[i]  = 0;
+       xsdisnc[i]  = 0;
        xsdisccp[i] = 0;
        xsdisccn[i] = 0;
        xsdisncp[i] = 0;
@@ -774,25 +822,37 @@ void SaveGraphsToRootFile(void)
 
        if (proc.IsDeepInelastic() && proc.IsWeakCC() && pdg::IsProton(tgt.HitNucPdg())) {
          for(int i=0; i<kNSplineP; i++) {
+             xsdiscc[i]  += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
              xsdisccp[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
          }
        }
        if (proc.IsDeepInelastic() && proc.IsWeakCC() && pdg::IsNeutron(tgt.HitNucPdg())) {
          for(int i=0; i<kNSplineP; i++) {
+             xsdiscc[i]  += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
              xsdisccn[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
          }
        }
        if (proc.IsDeepInelastic() && proc.IsWeakNC() && pdg::IsProton(tgt.HitNucPdg())) {
          for(int i=0; i<kNSplineP; i++) {
+             xsdisnc[i]  += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
              xsdisncp[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
          }
        }
        if (proc.IsDeepInelastic() && proc.IsWeakNC() && pdg::IsNeutron(tgt.HitNucPdg())) {
          for(int i=0; i<kNSplineP; i++) {
+             xsdisnc[i]  += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
              xsdisncn[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
          }
        }
     }
+    TGraph * gr_discc = new TGraph(kNSplineP, e, xsdiscc);
+    gr_discc->SetName("dis_cc");
+    FormatXSecGraph(gr_discc);
+    topdir->Add(gr_discc);
+    TGraph * gr_disnc = new TGraph(kNSplineP, e, xsdisnc);
+    gr_disnc->SetName("dis_nc");
+    FormatXSecGraph(gr_disnc);
+    topdir->Add(gr_disnc);
     TGraph * gr_disccp = new TGraph(kNSplineP, e, xsdisccp);
     gr_disccp->SetName("dis_cc_p");
     FormatXSecGraph(gr_disccp);
@@ -815,43 +875,57 @@ void SaveGraphsToRootFile(void)
     //
 
     for(int i=0; i<kNSplineP; i++) {
-      xsdisccp[i] = 0;
-      xsdisccn[i] = 0;
-      xsdisncp[i] = 0;
-      xsdisncn[i] = 0;
+       xsdiscc[i]  = 0;
+       xsdisnc[i]  = 0;
+       xsdisccp[i] = 0;
+       xsdisccn[i] = 0;
+       xsdisncp[i] = 0;
+       xsdisncn[i] = 0;
     }
     for(ilistiter = ilist->begin(); ilistiter != ilist->end(); ++ilistiter) {
-      const Interaction * interaction = *ilistiter;
-      const ProcessInfo &  proc = interaction->ProcInfo();
-      const XclsTag &      xcls = interaction->ExclTag();
-      const InitialState & init = interaction->InitState();
-      const Target &       tgt  = init.Tgt();
+       const Interaction * interaction = *ilistiter;
+       const ProcessInfo &  proc = interaction->ProcInfo();
+       const XclsTag &      xcls = interaction->ExclTag();
+       const InitialState & init = interaction->InitState();
+       const Target &       tgt  = init.Tgt();
 
-      const Spline * spl = evg_driver.XSecSpline(interaction);
+       const Spline * spl = evg_driver.XSecSpline(interaction);
 
-      if(!xcls.IsCharmEvent()) continue;
+       if(!xcls.IsCharmEvent()) continue;
 
-      if (proc.IsDeepInelastic() && proc.IsWeakCC() && pdg::IsProton(tgt.HitNucPdg())) {
-        for(int i=0; i<kNSplineP; i++) {
-            xsdisccp[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
-        }
-      }
-      if (proc.IsDeepInelastic() && proc.IsWeakCC() && pdg::IsNeutron(tgt.HitNucPdg())) {
-        for(int i=0; i<kNSplineP; i++) {
-            xsdisccn[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
-        }
-      }
-      if (proc.IsDeepInelastic() && proc.IsWeakNC() && pdg::IsProton(tgt.HitNucPdg())) {
-        for(int i=0; i<kNSplineP; i++) {
-            xsdisncp[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
-        }
-      }
-      if (proc.IsDeepInelastic() && proc.IsWeakNC() && pdg::IsNeutron(tgt.HitNucPdg())) {
-        for(int i=0; i<kNSplineP; i++) {
-            xsdisncn[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
-        }
-      }
+       if (proc.IsDeepInelastic() && proc.IsWeakCC() && pdg::IsProton(tgt.HitNucPdg())) {
+         for(int i=0; i<kNSplineP; i++) {
+             xsdiscc[i]  += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
+             xsdisccp[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
+         }
+       }
+       if (proc.IsDeepInelastic() && proc.IsWeakCC() && pdg::IsNeutron(tgt.HitNucPdg())) {
+         for(int i=0; i<kNSplineP; i++) {
+             xsdiscc[i]  += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
+             xsdisccn[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
+         }
+       }
+       if (proc.IsDeepInelastic() && proc.IsWeakNC() && pdg::IsProton(tgt.HitNucPdg())) {
+         for(int i=0; i<kNSplineP; i++) {
+             xsdisnc[i]  += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
+             xsdisncp[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
+         }
+       }
+       if (proc.IsDeepInelastic() && proc.IsWeakNC() && pdg::IsNeutron(tgt.HitNucPdg())) {
+         for(int i=0; i<kNSplineP; i++) {
+             xsdisnc[i]  += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
+             xsdisncn[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2));
+         }
+       }
     }
+    TGraph * gr_discc_charm = new TGraph(kNSplineP, e, xsdiscc);
+    gr_discc_charm->SetName("dis_cc_charm");
+    FormatXSecGraph(gr_discc_charm);
+    topdir->Add(gr_discc_charm);
+    TGraph * gr_disnc_charm = new TGraph(kNSplineP, e, xsdisnc);
+    gr_disnc_charm->SetName("dis_nc_charm");
+    FormatXSecGraph(gr_disnc_charm);
+    topdir->Add(gr_disnc_charm);
     TGraph * gr_disccp_charm = new TGraph(kNSplineP, e, xsdisccp);
     gr_disccp_charm->SetName("dis_cc_p_charm");
     FormatXSecGraph(gr_disccp_charm);
@@ -961,6 +1035,55 @@ void SaveGraphsToRootFile(void)
     topdir->Add(gr_cohtot);
 
     //
+    // add-up all glres and photon-res channels
+    //
+
+    double * xsglrescc = new double[kNSplineP];
+    double * xsglresnc = new double[kNSplineP];
+    double * xsphrescc = new double[kNSplineP];
+    for(int i=0; i<kNSplineP; i++) {
+       xsglrescc[i] = 0;
+       xsglresnc[i] = 0;
+       xsphrescc[i] = 0;
+    }
+    for(ilistiter = ilist->begin(); ilistiter != ilist->end(); ++ilistiter) {    
+       const Interaction * interaction = *ilistiter;
+       const ProcessInfo &  proc = interaction->ProcInfo();
+
+       const Spline * spl = evg_driver.XSecSpline(interaction);
+ 
+       if (proc.IsGlashowResonance() && proc.IsWeakCC()) {
+         for(int i=0; i<kNSplineP; i++) { 
+             xsglrescc[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2)); 
+         }        
+       } 
+       if (proc.IsGlashowResonance() && proc.IsWeakNC()) {
+         for(int i=0; i<kNSplineP; i++) { 
+             xsglresnc[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2)); 
+         }        
+       } 
+       if (proc.IsPhotonResonance()) {
+         for(int i=0; i<kNSplineP; i++) { 
+             xsphrescc[i] += (spl->Evaluate(e[i]) * (1E+38/units::cm2)); 
+         }    
+             
+       } 
+    }
+    TGraph * gr_glrescc = new TGraph(kNSplineP, e, xsglrescc);
+    gr_glrescc->SetName("glres_cc");
+    FormatXSecGraph(gr_glrescc);
+    topdir->Add(gr_glrescc);
+    TGraph * gr_glresnc = new TGraph(kNSplineP, e, xsglresnc);
+    gr_glresnc->SetName("glres_nc");
+    FormatXSecGraph(gr_glresnc);
+    topdir->Add(gr_glresnc);
+    TGraph * gr_phrescc = new TGraph(kNSplineP, e, xsphrescc);
+    gr_phrescc->SetName("phres_cc");
+    FormatXSecGraph(gr_phrescc);
+    topdir->Add(gr_phrescc);
+
+
+    //
     // total cross sections
     //
     double * xstotcc  = new double[kNSplineP];
@@ -1058,9 +1181,14 @@ void SaveGraphsToRootFile(void)
     delete [] xsdisccn;
     delete [] xsdisncp;
     delete [] xsdisncn;
+    delete [] xsdiscc;
+    delete [] xsdisnc;
     delete [] xscohcc;
     delete [] xscohnc;
     delete [] xscohtot;
+    delete [] xsglrescc;
+    delete [] xsglresnc;
+    delete [] xsphrescc;
     delete [] xstotcc;
     delete [] xstotccp;
     delete [] xstotccn;
@@ -1354,15 +1482,33 @@ void GetCommandLineArgs(int argc, char ** argv)
     exit(1);
   }
 
-  // max neutrino energy
+  // min,max neutrino energy
   if( parser.OptionExists('e') ) {
     LOG("gspl2root", pINFO) << "Reading neutrino energy";
-    gOptNuEnergy = parser.ArgAsDouble('e');
+    string nue = parser.ArgAsString('e');
+    // is it just a value or a range (comma separated set of values)
+    if(nue.find(",") != string::npos) {
+       // split the comma separated list
+       vector<string> nurange = utils::str::Split(nue, ",");
+       assert(nurange.size() == 2);
+       gEmin = atof(nurange[0].c_str());
+       gEmax = atof(nurange[1].c_str());
+    } else {
+      const Registry * val_reg = AlgConfigPool::Instance() -> CommonList( "Param", "Validation" ) ;
+      gEmin = val_reg -> GetDouble( "GVLD-Emin" ) ; 
+      gEmax = atof(nue.c_str());
+      LOG("gspl2root", pDEBUG)
+	<< "Unspecified Emin - Setting to " << gEmin << " GeV as per configuration";
+    }
   } else {
+    const Registry * val_reg = AlgConfigPool::Instance() -> CommonList("Param", "Validation" ) ;
+    gEmin = val_reg -> GetDouble( "GVLD-Emin" ) ; 
+    gEmax = 100;
     LOG("gspl2root", pDEBUG)
-       << "Unspecified Emax - Setting to 100 GeV";
-    gOptNuEnergy = 100;
+      << "Unspecified Emin,Emax - Setting to " << gEmin << ",100 GeV ";
+
   }
+  assert(gEmin<gEmax);
 
   // output ROOT file name:
   if( parser.OptionExists('o') ) {
@@ -1380,17 +1526,16 @@ void GetCommandLineArgs(int argc, char ** argv)
   // use same abscissa points as splines
   //not yet//gKeepSplineKnots = parser.OptionExists('k');
 
-
-  gEmin  = kEmin;
-  gEmax  = gOptNuEnergy;
-  assert(gEmin<gEmax);
+  gInlogE = parser.OptionExists('l');
 
   // print the options you got from command line arguments
   LOG("gspl2root", pINFO) << "Command line arguments:";
   LOG("gspl2root", pINFO) << "  Input XML file  = " << gOptXMLFilename;
   LOG("gspl2root", pINFO) << "  Probe PDG code  = " << gOptProbePdgCode;
   LOG("gspl2root", pINFO) << "  Target PDG code = " << gOptTgtPdgCode;
-  LOG("gspl2root", pINFO) << "  Max neutrino E  = " << gOptNuEnergy;
+  LOG("gspl2root", pINFO) << "  Min neutrino E  = " << gEmin;
+  LOG("gspl2root", pINFO) << "  Max neutrino E  = " << gEmax;
+  LOG("gspl2root", pINFO) << "  In logE         = " << gInlogE;
   //not yet//LOG("gspl2root", pINFO) << "  Keep spline knots  = " << (gKeepSplineKnots?"true":"false");
 }
 //____________________________________________________________________________
@@ -1399,7 +1544,7 @@ void PrintSyntax(void)
   LOG("gspl2root", pNOTICE)
       << "\n\n" << "Syntax:" << "\n"
       << "   gspl2root -f xml_file -p probe_pdg -t target_pdg"
-      << "            [-e emax] [-o output_root_file] [-w]\n"
+      << "            [-e emin,emax] [-o output_root_file] [-w] [-l]\n"
       << "            [--message-thresholds xml_file]\n";
 }
 //____________________________________________________________________________

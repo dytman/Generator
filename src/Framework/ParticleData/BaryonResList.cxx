@@ -1,16 +1,10 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2019, The GENIE Collaboration
+ Copyright (c) 2003-2022, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
- or see $GENIE/LICENSE
 
- Author: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-         University of Liverpool & STFC Rutherford Appleton Lab 
-
- For the class documentation see the corresponding header file.
-
- Important revisions after version 2.0.0 :
-
+ Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+ University of Liverpool & STFC Rutherford Appleton Laboratory
 */
 //____________________________________________________________________________
 
@@ -158,6 +152,34 @@ void BaryonResList::Print(ostream & stream) const
   }
 }
 //____________________________________________________________________________
-
-
+auto BaryonResList::begin() noexcept -> typename vector<Resonance_t>::iterator
+{
+  return fResVec->begin();
+}
+//____________________________________________________________________________
+auto BaryonResList::end() noexcept -> typename vector<Resonance_t>::iterator
+{
+  return fResVec->end();
+}
+//____________________________________________________________________________
+auto BaryonResList::begin() const noexcept -> typename vector<Resonance_t>::const_iterator
+{
+  return fResVec->begin();
+}
+//____________________________________________________________________________
+auto BaryonResList::end() const noexcept -> typename vector<Resonance_t>::const_iterator
+{
+  return fResVec->end();
+}
+//____________________________________________________________________________
+auto BaryonResList::cbegin() const noexcept -> typename vector<Resonance_t>::const_iterator
+{
+  return fResVec->cbegin();
+}
+//____________________________________________________________________________
+auto BaryonResList::cend() const noexcept -> typename vector<Resonance_t>::const_iterator
+{
+  return fResVec->cend();
+}
+//____________________________________________________________________________
 

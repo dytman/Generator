@@ -1,18 +1,10 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2019, The GENIE Collaboration
+ Copyright (c) 2003-2022, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
- or see $GENIE/LICENSE
 
- Author: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-         University of Liverpool & STFC Rutherford Appleton Lab
-
- For the class documentation see the corresponding header file.
-
- Important revisions after version 2.0.0 :
- @ Jan 29, 2013 - CA
-   Added in preparartion for v2.8.0, when use of env. vars was phased out.
-
+ Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+ University of Liverpool & STFC Rutherford Appleton Laboratory
 */
 //____________________________________________________________________________
 
@@ -160,6 +152,34 @@ void RunOpt::ReadFromCommandLine(int argc, char ** argv)
      } //i
   }
 
+}
+//____________________________________________________________________________
+std::string RunOpt::RunOptSyntaxString(bool include_generator_specific)
+{
+  std::ostringstream s;
+  s << "\n"
+    << "\n // command line args handled by RunOpt:"
+    // for v3, all tunes should have a Default event-generator-list
+    << "\n         [--event-generator-list list_name] // default \"Default\" "
+    // G18_02a_00_000 is currently the default tune
+    << "\n         [--tune tune_name]  // default \"" << gDefaultTune << "\" "
+    << "\n         [--xml-path path]"
+    << "\n         [--message-thresholds xml_file]";
+
+  if (include_generator_specific) {
+    // these options are only for generator applications
+    //    << "\n // not all options used by all applications "
+    s << "\n"
+      << "\n         [--event-record-print-level level]"
+      << "\n         [--mc-job-status-refresh-rate rate]"
+      << "\n         [--cache-file root_file]"
+      << "\n         [--enable-bare-xsec-pre-calc]"
+      << "\n         [--disable-bare-xsec-pre-calc]"
+      << "\n         [--unphysical-event-mask mask]"
+      << "\n";
+  }
+
+  return s.str();
 }
 //____________________________________________________________________________
 void RunOpt::Print(ostream & stream) const

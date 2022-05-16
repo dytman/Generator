@@ -8,15 +8,6 @@
 #pragma link C++ namespace genie::utils;
 #pragma link C++ namespace genie::utils::gsl;
 
-//#pragma link C++ class genie::QELXSec;
-//#pragma link C++ class genie::RESXSec;
-//#pragma link C++ class genie::DISXSec;
-//#pragma link C++ class genie::IMDXSec;
-//#pragma link C++ class genie::COHXSec;
-//#pragma link C++ class genie::COHXSecAR;
-//#pragma link C++ class genie::DFRXSec;
-//#pragma link C++ class genie::NuElectronXSec;
-
 #pragma link C++ class genie::XSecIntegratorI;
 
 // Wrappers for GSL/MathMore lib
@@ -34,5 +25,7 @@
 #pragma link C++ class genie::utils::gsl::d3Xsec_dOmegaldThetapi;
 #pragma link C++ class genie::utils::gsl::dXSec_dElep_AR;
 #pragma link C++ class genie::utils::gsl::dXSec_Log_Wrapper;
+#pragma link C++ class genie::utils::gsl::d2Xsec_dn1dn2_E;
+#pragma link C++ class genie::utils::gsl::d2Xsec_dn1dn2dn3_E;
 
 #endif

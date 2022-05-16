@@ -1,4 +1,5 @@
 #ifdef __CINT__
+#include "Framework/Conventions/GBuild.h"
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -22,6 +23,14 @@
 #pragma link C++ class genie::HAIntranuke2018;
 #pragma link C++ class genie::HNIntranuke2018;
 
+#pragma link C++ class genie::CascadeReweight;
 
+#ifdef __GENIE_INCL_ENABLED__
+#pragma link C++ class genie::HINCLCascadeIntranuke;
+#endif
+
+#ifdef __GENIE_GEANT4_INTERFACE_ENABLED__
+#pragma link C++ class genie::HG4BertCascIntranuke;
+#endif
 
 #endif

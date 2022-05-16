@@ -8,13 +8,13 @@
 
 \author   Steve Dytman <dytman+@pitt.edu>, Pittsburgh Univ.
           Hugh Gallagher <gallag@minos.phy.tufts.edu>, Tufts Univ.
-          Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>, Rutherford Lab.
+          Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>, Rutherford Lab.
 
 \created  November 1, 2005
 
-\cpright  Copyright (c) 2003-2019, The GENIE Collaboration
+\cpright  Copyright (c) 2003-2022, The GENIE Collaboration
           For the full text of the license visit http://copyright.genie-mc.org
-          or see $GENIE/LICENSE 
+           
 */
 //____________________________________________________________________________
 
@@ -22,8 +22,6 @@
 #define _INTRANUKE_FATES_H_
 
 #include <string>
-
-
 
 namespace genie {
 
@@ -118,6 +116,7 @@ public:
      return "undefined"; 
   }
   //__________________________________________________________________________
+
 };
 
 }      // genie

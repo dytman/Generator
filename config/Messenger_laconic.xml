@@ -39,6 +39,7 @@
   <priority msgstream="BardinIMD">                     WARN   </priority>
   <priority msgstream="BaryonResList">                 WARN   </priority>
   <priority msgstream="BaseHad">                       WARN   </priority>
+  <priority msgstream="BertuzzoDNuCOH">                WARN   </priority>
   <priority msgstream="BreitWignet">                   WARN   </priority>
   <priority msgstream="Bardin">                        WARN   </priority>
   <priority msgstream="BSKLNBaseRESPXSec2014">         WARN   </priority>
@@ -48,6 +49,8 @@
   <priority msgstream="SMQELXSec">                     WARN   </priority>
   <priority msgstream="Cache">                         WARN   </priority>
   <priority msgstream="CEvNS">                         WARN   </priority>
+  <priority msgstream="COHDNu">                        WARN   </priority>
+  <priority msgstream="COHDNuXSec">                    WARN   </priority>
   <priority msgstream="CharmHad">                      WARN   </priority>
   <priority msgstream="CFracTab">                      WARN   </priority>
   <priority msgstream="COHXSec">                       WARN   </priority>
@@ -55,6 +58,7 @@
   <priority msgstream="CLAP">                          WARN   </priority>
   <priority msgstream="COHHadronicVtx">                WARN   </priority>
   <priority msgstream="COHKinematics">                 WARN   </priority>
+  <priority msgstream="DarkSectorDecayer">             WARN   </priority>
   <priority msgstream="Decay">                         WARN   </priority>
   <priority msgstream="DISSF">                         WARN   </priority>
   <priority msgstream="DISXSec">                       WARN   </priority>
@@ -76,6 +80,7 @@
   <priority msgstream="EVGChain">                      WARN   </priority>
   <priority msgstream="EvGenListAssembler">            WARN   </priority>
   <priority msgstream="ELFormFactors">                 WARN   </priority>
+  <priority msgstream="EngelFormFactor">               WARN   </priority>
   <priority msgstream="FermiMover">                    WARN   </priority>
   <priority msgstream="FermiP">                        WARN   </priority>
   <priority msgstream="Flux">                          WARN   </priority>
@@ -119,6 +124,8 @@
   <priority msgstream="INukeUtils">                    WARN   </priority>
   <priority msgstream="INukeUtils2019">                WARN   </priority>
   <priority msgstream="INukeUtils2018">                WARN   </priority>
+  <priority msgstream="HINCLCascadeIntranuke">         WARN   </priority>
+  <priority msgstream="HG4BertCascIntranuke">          WARN   </priority>
   <priority msgstream="INukeNucleonCorr">              WARN   </priority>
   <priority msgstream="TwoBodyCollision">              WARN   </priority>
   <priority msgstream="ISApp">                         WARN   </priority>
@@ -192,6 +199,22 @@
   <priority msgstream="XSecBase">                      WARN   </priority>
   <priority msgstream="XSecAlgMap">                    WARN   </priority>
   <priority msgstream="XSecSplLst">                    WARN   </priority>
+  <priority msgstream="HELeptonXSec">                  WARN   </priority>
+  <priority msgstream="HELeptonKinematics">            WARN   </priority>
+  <priority msgstream="GLRESPXSec">                    WARN   </priority>
+  <priority msgstream="GLRESGenerator">                WARN   </priority>
+  <priority msgstream="HENuElPXSec">                   WARN   </priority>
+  <priority msgstream="HENuElGenerator">               WARN   </priority>
+  <priority msgstream="PhotonRESPXSec">                WARN   </priority>
+  <priority msgstream="PhotonRESGenerator">            WARN   </priority>
+  <priority msgstream="PhotonCOHPXSec">                WARN   </priority>
+  <priority msgstream="PhotonCOHGenerator">            WARN   </priority>
+  <priority msgstream="HEDISXSec">                     WARN   </priority>
+  <priority msgstream="HEDISPXSec">                    WARN   </priority>
+  <priority msgstream="HEDISGenerator">                WARN   </priority>
+  <priority msgstream="HEDISKinematics">               WARN   </priority>
+  <priority msgstream="HEDISStrucFunc">                WARN   </priority>
+  <priority msgstream="LeptoHad">                      WARN   </priority>
 
   <priority msgstream="gevgen">                        WARN   </priority>
   <priority msgstream="gevgen_dm">                     WARN   </priority>
@@ -206,5 +229,8 @@
   <priority msgstream="gntpc">                         WARN   </priority>
   <priority msgstream="gmkspl">                        WARN   </priority>
   <priority msgstream="gmkspl_dm">                     WARN   </priority>
+  <priority msgstream="gcalchedisdiffxsec">            WARN   </priority>
+  <priority msgstream="gmkhedissf">                    WARN   </priority>
+  <priority msgstream="gmkphotonsf">                   WARN   </priority>
 
 </messenger_config>

@@ -1,16 +1,10 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2019, The GENIE Collaboration
+ Copyright (c) 2003-2022, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
- or see $GENIE/LICENSE
 
- Author: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-         University of Liverpool & STFC Rutherford Appleton Lab - October 01, 2004
-
- For the class documentation see the corresponding header file.
-
- Important revisions after version 2.0.0 :
-
+ Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+ University of Liverpool & STFC Rutherford Appleton Laboratory
 */
 //____________________________________________________________________________
 
@@ -64,14 +58,15 @@ void NtpMCTreeHeader::PrintToStream(ostream & stream) const
   string stuneDir    = this->tuneDir.GetString().Data();
   string scustomDirs = this->customDirs.GetString().Data();
 
-  stream << "Tree Header Info:"                     << endl
-         << "MC run number     -> " << this->runnu  << endl
-         << "NtpRecord Format  -> " << sformat      << endl
-         << "GENIE CVS Vrs Nu  -> " << scvstag      << endl
-         << "GENIE tune name   -> " << stune        << endl
-         << "tune directory    -> " << stuneDir     << endl
-         << "custom directories-> " << scustomDirs  << endl
-         << "File generated at -> " << this->datime << endl;
+  stream << "Tree Header Info:"                      << endl
+         << "MC run number     -> " << this->runnu   << endl
+         << "MC run seed       -> " << this->runseed << endl
+         << "NtpRecord Format  -> " << sformat       << endl
+         << "GENIE CVS Vrs Nu  -> " << scvstag       << endl
+         << "GENIE tune name   -> " << stune         << endl
+         << "tune directory    -> " << stuneDir      << endl
+         << "custom directories-> " << scustomDirs   << endl
+         << "File generated at -> " << this->datime  << endl;
 }
 //____________________________________________________________________________
 void NtpMCTreeHeader::Copy(const NtpMCTreeHeader & hdr)
@@ -80,6 +75,7 @@ void NtpMCTreeHeader::Copy(const NtpMCTreeHeader & hdr)
   this->cvstag.SetString(hdr.cvstag.GetString().Data());
   this->datime.Copy(hdr.datime);
   this->runnu  = hdr.runnu;
+  this->runseed  = hdr.runseed;
   this->tune.SetString(hdr.tune.GetString().Data());
   this->tuneDir.SetString(hdr.tuneDir.GetString().Data());
   this->customDirs.SetString(hdr.customDirs.GetString().Data());
@@ -108,7 +104,8 @@ void NtpMCTreeHeader::Init(void)
   this->format = kNFUndefined;
   this->cvstag.SetString(version.c_str());
   this->datime.Now();
-  this->runnu  = 0;
+  this->runnu   = 0;
+  this->runseed = 0;
   this->tune.SetString(tunename.c_str());
   this->tuneDir.SetString(tuneDir.c_str());
   this->customDirs.SetString(customDirs.c_str());

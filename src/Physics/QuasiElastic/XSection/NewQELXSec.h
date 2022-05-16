@@ -11,9 +11,8 @@
 
 \created  February 26, 2019
 
-\cpright  Copyright (c) 2003-2019, The GENIE Collaboration
+\cpright  Copyright (c) 2003-2022, The GENIE Collaboration
           For the full text of the license visit http://copyright.genie-mc.org
-          or see $GENIE/LICENSE
 */
 //____________________________________________________________________________
 
@@ -76,7 +75,6 @@ public:
   void Configure(const Registry& config);
   void Configure(std::string config);
 
-
 private:
 
   void LoadConfig (void);
@@ -91,6 +89,15 @@ private:
   AlgId fVertexGenID;
   int fNumNucleonThrows;
   double fMinAngleEM;
+
+  // If false, the total cross section will be computed by integrating over
+  // lepton scattering angles while preserving the momentum and removal energy
+  // of the initial hit nucleon (specified in the input Interaction object).
+  // This approach is needed for "CCQE shape" tweak dials in Reweight. If true
+  // (default), then an MC integration is also performed over the distribution
+  // of initial nucleons. This approach is needed to create total cross section
+  // splines.
+  bool fAverageOverNucleons;
 };
 
 

@@ -13,16 +13,16 @@
 #   [--cycle]         : default: 01
 #   [--use-valgrind]  : default: off
 #   [--batch-system]  : <PBS, LSF, slurm, HTCondor, HTCondor_PBS, none>, default: PBS
-#   [--queue]         : default: prod
+#   [--queue]         : default: prod.
 #   [--softw-topdir]  : top level dir for softw installations, default: /opt/ppd/t2k/softw/GENIE/generator
 #   [--jobs-topdir]   : top level dir for job files, default: /opt/ppd/t2k/softw/GENIE/scratch
 #
 # Author:
-#   Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
+#   Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
 #   University of Liverpool & STFC Rutherford Appleton Laboratory
 #
 # Copyright:
-#   Copyright (c) 2003-2019, The GENIE Collaboration
+#   Copyright (c) 2003-2022, The GENIE Collaboration
 #   For the full text of the license visit http://copyright.genie-mc.org
 #----------------------------------------------------------------------------------------------------------------
 
@@ -58,7 +58,6 @@ $jobs_topdir    = "/opt/ppd/t2k/softw/GENIE/scratch"   unless defined $jobs_topd
 $genie_setup    = "$softw_topdir/builds/$arch/$genie_version-setup";
 $freenucsplines = "$softw_topdir/data/job_inputs/xspl/gxspl-vN-$genie_version.xml";
 $jobs_dir       = "$jobs_topdir/xsec\_t2k-$production\_$cycle/";
-
 $nkots     = 200;
 $emax      =  35;
 $neutrinos = "12,-12,14,-14";

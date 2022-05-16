@@ -38,6 +38,7 @@
   <priority msgstream="BardinIMD">             NOTICE </priority>
   <priority msgstream="BaryonResList">         WARN   </priority>
   <priority msgstream="BaseHad">               NOTICE </priority>
+  <priority msgstream="BertuzzoDNuCOH">        INFO </priority>
   <priority msgstream="BSKLNBaseRESPXSec2014"> INFO   </priority>
   <priority msgstream="BreitWignet">           INFO   </priority>
   <priority msgstream="Bardin">                INFO   </priority>
@@ -49,11 +50,14 @@
   <priority msgstream="CharmHad">              NOTICE </priority>
   <priority msgstream="CFracTab">              INFO   </priority>
   <priority msgstream="CEvNS">                 NOTICE </priority>
+  <priority msgstream="COHDNu">                NOTICE </priority>
+  <priority msgstream="COHDNuXSec">            NOTICE </priority>
   <priority msgstream="COHXSec">               NOTICE </priority>
   <priority msgstream="COHXSecAR">             NOTICE </priority>
   <priority msgstream="CLAP">                  NOTICE </priority>
   <priority msgstream="COHHadronicVtx">        INFO   </priority>
   <priority msgstream="COHKinematics">         NOTICE </priority>
+  <priority msgstream="DarkSectorDecayer">     INFO   </priority>
   <priority msgstream="DFRHadronicVtx">        DEBUG  </priority>
   <priority msgstream="DFRKinematics">         DEBUG  </priority>
   <priority msgstream="Decay">                 NOTICE </priority>
@@ -77,6 +81,7 @@
   <priority msgstream="EVGChain">              INFO   </priority>
   <priority msgstream="EvGenListAssembler">    WARN   </priority>
   <priority msgstream="ELFormFactors">         INFO   </priority>
+  <priority msgstream="EngelFormFactor">       INFO   </priority>
   <priority msgstream="FermiMover">            INFO   </priority>
   <priority msgstream="FermiP">                NOTICE </priority>
   <priority msgstream="Flux">                  NOTICE </priority>
@@ -90,6 +95,7 @@
   <priority msgstream="GROOTGeom">             NOTICE </priority>
   <priority msgstream="GHEP">                  WARN   </priority>
   <priority msgstream="GHepParticle">          INFO   </priority>
+  <priority msgstream="GHepUtils">             INFO   </priority>
   <priority msgstream="GuiUtils">              INFO   </priority>
   <priority msgstream="GRV98LO">               NOTICE </priority>
   <priority msgstream="GXSecFunc">             WARN   </priority>
@@ -119,6 +125,8 @@
   <priority msgstream="INukeUtils">            NOTICE </priority> <!-- notice-->
   <priority msgstream="INukeUtils2018">        NOTICE </priority> <!-- notice-->
   <priority msgstream="INukeUtils2019">        NOTICE </priority> <!-- notice-->
+  <priority msgstream="HINCLCascadeIntranuke"> NOTICE </priority>
+  <priority msgstream="HG4BertCascIntranuke">  NOTICE </priority>
   <priority msgstream="INukeNucleonCorr">      NOTICE </priority>
   <priority msgstream="ISApp">                 INFO   </priority>
   <priority msgstream="IntGenMap">             WARN   </priority>
@@ -189,6 +197,20 @@
   <priority msgstream="XSecBase">              NOTICE </priority>
   <priority msgstream="XSecAlgMap">            NOTICE </priority>
   <priority msgstream="XSecSplLst">            NOTICE </priority>
+  <priority msgstream="GLRESPXSec">            WARN   </priority>
+  <priority msgstream="GLRESGenerator">        WARN   </priority>
+  <priority msgstream="HENuElPXSec">           WARN   </priority>
+  <priority msgstream="HENuElGenerator">       WARN   </priority>
+  <priority msgstream="PhotonRESPXSec">        WARN   </priority>
+  <priority msgstream="PhotonRESGenerator">    WARN   </priority>
+  <priority msgstream="PhotonCOHPXSec">        WARN   </priority>
+  <priority msgstream="PhotonCOHGenerator">    WARN   </priority>
+  <priority msgstream="HEDISXSec">             WARN   </priority>
+  <priority msgstream="HEDISPXSec">            WARN   </priority>
+  <priority msgstream="HEDISGenerator">        WARN   </priority>
+  <priority msgstream="HEDISKinematics">       WARN   </priority>
+  <priority msgstream="HEDISStrucFunc">        WARN   </priority>
+  <priority msgstream="LeptoHad">              ERROR  </priority>
 
   <priority msgstream="gevgen">                NOTICE </priority>
   <priority msgstream="gevgen_dm">             NOTICE </priority>
@@ -204,5 +226,8 @@
   <priority msgstream="gntpc">                 INFO   </priority>
   <priority msgstream="gmkspl">                INFO   </priority>
   <priority msgstream="gmkspl_dm">             INFO   </priority>
+  <priority msgstream="gcalchedisdiffxsec">    INFO   </priority>
+  <priority msgstream="gmkhedissf">            INFO   </priority>
+  <priority msgstream="gmkphotonsf">           INFO   </priority>
 
 </messenger_config>

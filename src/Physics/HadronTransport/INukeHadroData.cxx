@@ -1,10 +1,10 @@
 //____________________________________________________________________________
 /*
- Copyright (C) 2003-2015, GENIE Neutrino MC Generator Collaboration
+ Copyright (c) 2003-2022, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
- or see $GENIE/LICENSE
+ 
 
- Author: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>, Rutherford Lab.
+ Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>, Rutherford Lab.
          Steve Dytman <dytman+@pitt.edu>, Pittsburgh Univ.
 	 Aaron Meyer <asm58@pitt.edu>, Pittsburgh Univ.
 	 Alex Bell, Pittsburgh Univ.

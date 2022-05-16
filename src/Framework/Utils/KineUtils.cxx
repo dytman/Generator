@@ -1,17 +1,16 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2019, The GENIE Collaboration
+ Copyright (c) 2003-2022, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
- or see $GENIE/LICENSE
 
- Authors: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-          University of Liverpool & STFC Rutherford Appleton Lab
+ Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+ University of Liverpool & STFC Rutherford Appleton Laboratory
 
-	  Afroditi Papadopoulou <apapadop \at mit.edu>
-	  Massachusetts Institute of Technology
+ Afroditi Papadopoulou <apapadop \at mit.edu>
+ Massachusetts Institute of Technology
 
-          Changes required to implement the GENIE Boosted Dark Matter module
-          were installed by Josh Berger (Univ. of Wisconsin)
+ Changes required to implement the GENIE Boosted Dark Matter module
+ were installed by Josh Berger (Univ. of Wisconsin)
 */
 //____________________________________________________________________________
 
@@ -26,6 +25,9 @@
 #include "Framework/ParticleData/PDGLibrary.h"
 #include "Framework/Utils/KineUtils.h"
 #include "Framework/Numerical/MathUtils.h"
+#include "Framework/Interaction/InteractionException.h"
+
+#include <sstream>
 
 using namespace genie;
 using namespace genie::constants;
@@ -156,9 +158,16 @@ double genie::utils::kinematics::Jacobian(
   bool forward;
   const Kinematics & kine = i->Kine();
 
+  // cover the simple case
+  if ( fromps == tops )
+  {
+    forward = true;
+    J = 1.;
+  }
   //
   // transformation: {Q2}|E -> {lnQ2}|E
   //
+  else
   if ( TransformMatched(fromps,tops,kPSQ2fE,kPSlogQ2fE,forward) )
   {
     J = 1. / kine.Q2();
@@ -183,12 +192,34 @@ double genie::utils::kinematics::Jacobian(
   }
 
   //
+  // transformation: {log10x,log10Q2}|E -> {x,Q2}|E
+  //
+  else
+  if ( TransformMatched(fromps,tops,kPSxQ2fE,kPSlog10xlog10Q2fE,forward) )
+  {
+    J = TMath::Log(10.)*kine.x() * TMath::Log(10.)*kine.Q2();
+  }
+
+  //
   // transformation: {Q2,y}|E -> {lnQ2,lny}|E
   //
   else
   if ( TransformMatched(fromps,tops,kPSQ2yfE,kPSlogQ2logyfE,forward) )
   {
     J = 1. / (kine.Q2() * kine.y());
+  }
+
+  //
+  // transformation: {x,y}|E -> {x,Q2}|E
+  //
+  else
+  if ( TransformMatched(fromps,tops,kPSxQ2fE,kPSxyfE,forward) )
+  {
+    const InitialState & init_state = i->InitState();
+    double Ev = init_state.ProbeE(kRfHitNucRest);
+    double M  = init_state.Tgt().HitNucP4Ptr()->M();
+    double x  = kine.x();
+    J = 2*x*Ev*M;
   }
 
   //
@@ -254,12 +285,51 @@ double genie::utils::kinematics::Jacobian(
     J = 2*constants::kPi;
   }
 
+  // Transformation: {Tl,ctl} -> {W,Q2}|E
+  // IMPORTANT NOTE: This transformation can't be done exactly in two
+  // dimensions due to Fermi motion. For fixed {W,Q2}, the azimuthal angle phi
+  // is uniformly distributed in the hit nucleon rest frame, while for fixed
+  // {Tl,ctl} it is uniform in the lab frame (i.e., the target nucleus rest
+  // frame). A 3D Jacobian is needed in order to account for the relationship
+  // between these two azimuthal angles. In the implementation below, I choose
+  // to neglect Fermi motion. Under this approximation, the lab and hit nucleon
+  // rest frames are the same. Doing things this way is a stopgap solution for
+  // the new XSecShape_CCMEC reweighting dial developed for MicroBooNE. A full
+  // solution should use the Jacobian that connects the 3D phase spaces which
+  // each include phi. - S. Gardiner, 29 July 2020
+  else if ( TransformMatched(fromps, tops, kPSTlctl, kPSWQ2fE, forward) )
+  {
+    // Probe properties (mass, energy, momentum)
+    const InitialState& init_state = i->InitState();
+    double mv = init_state.Probe()->Mass();
+    double Ev = init_state.ProbeE( kRfLab );
+    double pv = std::sqrt( std::max(0., Ev*Ev - mv*mv) );
+
+    // Invariant mass of the initial hit nucleon
+    const TLorentzVector& hit_nuc_P4 = init_state.Tgt().HitNucP4();
+    double M = hit_nuc_P4.M();
+
+    // Outgoing lepton mass
+    double ml = i->FSPrimLepton()->Mass();
+
+    double W = i->Kine().GetKV( kKVW );
+    double Q2 = i->Kine().GetKV( kKVQ2 );
+    double El = Ev - ( (W*W + Q2 - M*M) / (2.*M) );
+    double pl = std::sqrt( std::max(0., El*El - ml*ml) );
+
+    // Compute the Jacobian for {Tl, ctl} --> {W, Q2}
+    // (it will be inverted below for the inverse transformation)
+    J = W / ( 2. * pv * pl * M );
+  }
+
   else {
-     SLOG("KineLimits", pFATAL)
-       << "*** Can not compute Jacobian for transforming: "
+     std::ostringstream msg;
+     msg << "Can not compute Jacobian for transforming: "
        << KinePhaseSpace::AsString(fromps) << " --> "
        << KinePhaseSpace::AsString(tops);
-     exit(1);
+     SLOG("KineLimits", pFATAL) << "*** " << msg.str();
+     throw genie::exceptions::InteractionException(msg.str());
+     //exit(1);
   }
 
   // if any of the above transforms was reverse, invert the jacobian
@@ -398,8 +468,8 @@ Range1D_t genie::utils::kinematics::InelXLim(double Ev, double M, double ml)
   assert (s>M2);
 
   Range1D_t x;
-  x.min = ml2/(s-M2) + controls::kASmallNum;
-  x.max = 1.         - controls::kASmallNum;
+  x.min = ml2/(s-M2) + controls::kAVerySmallNum;
+  x.max = 1.         - controls::kAVerySmallNum;
 
   return x;
 }
@@ -429,8 +499,8 @@ Range1D_t genie::utils::kinematics::InelYLim(double Ev, double M, double ml)
   }
 
   if(y.max >= 0 && y.max <= 1 && y.min >= 0 && y.min <= 1) {
-    y.min = TMath::Max(y.min,     controls::kASmallNum);
-    y.max = TMath::Min(y.max, 1 - controls::kASmallNum);
+    y.min = TMath::Max(y.min,     controls::kAVerySmallNum);
+    y.max = TMath::Min(y.max, 1 - controls::kAVerySmallNum);
   } else {
     y.min = -1;
     y.max = -1;
@@ -466,8 +536,8 @@ Range1D_t genie::utils::kinematics::InelYLim_X(
   double A = 0.5 * (1-a-0.5*b)/c;
   double B = 0.5 * TMath::Sqrt(d)/c;
 
-  y.min = TMath::Max(0., A-B) + controls::kASmallNum;
-  y.max = TMath::Min(1., A+B) - controls::kASmallNum;
+  y.min = TMath::Max(0., A-B) + controls::kAVerySmallNum;
+  y.max = TMath::Min(1., A+B) - controls::kAVerySmallNum;
 
   return y;
 }
@@ -528,7 +598,7 @@ Range1D_t genie::utils::kinematics::electromagnetic::InelQ2Lim_W(
   Q2.min = TMath::Max(0., Q2.min);
 
   // limit the minimum Q2
-  if(Q2.min < utils::kinematics::electromagnetic::kMinQ2Limit) {Q2.min = utils::kinematics::electromagnetic::kMinQ2Limit; } // use the relevant threshold for em scattering 
+  if(Q2.min < utils::kinematics::electromagnetic::kMinQ2Limit) {Q2.min = utils::kinematics::electromagnetic::kMinQ2Limit; } // use the relevant threshold for em scattering
   if(Q2.max < Q2.min   ) {Q2.min = -1; Q2.max = -1;}
 
   return Q2;
@@ -675,8 +745,8 @@ Range1D_t genie::utils::kinematics::CohQ2Lim(double Mn, double m_produced, doubl
   // The expressions for Q^2 min appears in PRD 74, 054007 (2006) by
   // Kartavtsev, Paschos, and Gounaris
 
-  // That expression is specified for the case of the pion. 
-  // GENIE has also Coherent interaction with Single gamma production and Rho 
+  // That expression is specified for the case of the pion.
+  // GENIE has also Coherent interaction with Single gamma production and Rho
   // so that formula will be adapted for a generic m_produced
 
   Range1D_t Q2;
@@ -727,8 +797,8 @@ Range1D_t genie::utils::kinematics::CohW2Lim(double Mn, double m_produced, doubl
   // These expressions for W^2 min and max appear in PRD 74, 054007 (2006) by
   // Kartavtsev, Paschos, and Gounaris
 
-  // That expression is specified for the case of the pion. 
-  // GENIE has also Coherent interaction with Single gamma production and Rho 
+  // That expression is specified for the case of the pion.
+  // GENIE has also Coherent interaction with Single gamma production and Rho
   // so that formula will be adapted for a generic m_produced
 
   Range1D_t W2l;
@@ -806,8 +876,8 @@ double genie::utils::kinematics::CohW2Min(double Mn, double m_produced)
   // These expressions for W^2 min and max appear in PRD 74, 054007 (2006) by
   // Kartavtsev, Paschos, and Gounaris
 
-  // That expression is specified for the case of the pion. 
-  // GENIE has also Coherent interaction with Single gamma production and Rho 
+  // That expression is specified for the case of the pion.
+  // GENIE has also Coherent interaction with Single gamma production and Rho
   // so that formula will be adapted for a generic m_produced
 
   return (Mn + m_produced) * (Mn + m_produced);
@@ -1100,6 +1170,25 @@ void genie::utils::kinematics::XYtoWQ2(
       << "(x=" << x << ",y=" << y << " => (W=" << W << ",Q2=" << Q2 << ")";
 }
 //___________________________________________________________________________
+void genie::utils::kinematics::XQ2toWY(
+            double Ev, double M, double & W, double Q2, double x, double & y)
+{
+// Converts (x,Q2) => (W,Y)
+// Uses the system: a) W^2 - M^2 = 2*Ev*M*y*(1-x) and b) Q^2 = 2*x*y*M*Ev
+// Ev is the neutrino energy at the struck nucleon rest frame
+// M is the nucleon mass - it does not need to be on the mass shell
+
+  double M2  = TMath::Power(M,2);
+  y = Q2 / (2 * x * M * Ev);
+  y = TMath::Min(1.,y);
+
+  double W2  = M2 + 2*Ev*M*y*(1-x);
+  W  = TMath::Sqrt(TMath::Max(0., W2));
+
+  LOG("KineLimits", pDEBUG)
+      << "(x=" << x << ",Q2=" << Q2 << " => (W=" << W << ",Y=" << y << ")";
+}
+//___________________________________________________________________________
 double genie::utils::kinematics::XYtoW(
                                      double Ev, double M, double x, double y)
 {
@@ -1230,6 +1319,24 @@ void genie::utils::kinematics::UpdateXYFromWQ2(const Interaction * in)
     double x=-1,y=-1;
     kinematics::WQ2toXY(Ev,M,W,Q2,x,y);
     kine->Setx(x);
+    kine->Sety(y);
+  }
+}
+//___________________________________________________________________________
+void genie::utils::kinematics::UpdateWYFromXQ2(const Interaction * in)
+{
+  Kinematics * kine = in->KinePtr();
+
+  if(kine->KVSet(kKVx) && kine->KVSet(kKVQ2)) {
+    const InitialState & init_state = in->InitState();
+    double Ev = init_state.ProbeE(kRfHitNucRest);
+    double M  = init_state.Tgt().HitNucP4Ptr()->M(); // can be off mass shell
+    double x  = kine->x();
+    double Q2 = kine->Q2();
+
+    double W=-1,y=-1;
+    kinematics::XQ2toWY(Ev,M,W,Q2,x,y);
+    kine->SetW(W);
     kine->Sety(y);
   }
 }
