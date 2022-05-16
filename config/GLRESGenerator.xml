@@ -2,7 +2,12 @@
 
 <alg_conf>
 
+<!--
+Configuration sets for GLRESGenerator EventRecordVisitorI
+-->
+
   <param_set name="Default"> 
+   <param type="string" name="CommonParam"> HEDIS-PYTHIA </param>
   </param_set>
 
 </alg_conf>

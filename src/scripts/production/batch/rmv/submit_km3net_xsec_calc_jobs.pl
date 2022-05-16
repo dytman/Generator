@@ -23,7 +23,7 @@
 #
 # Tested at the RAL/PPD Tier2 PBS batch farm.
 #
-# Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
+# Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
 # STFC, Rutherford Appleton Lab
 #----------------------------------------------------------------------
 
@@ -56,7 +56,6 @@ $softw_topdir   = "/opt/ppd/t2k/softw/GENIE" unless defined $softw_topdir;
 $genie_setup    = "$softw_topdir/builds/$arch/$genie_version-setup";
 $jobs_dir       = "$softw_topdir/scratch/xsec\_km3net-$production\_$cycle/";
 $freenucsplines = "$softw_topdir/data/job_inputs/xspl/gxspl-vN-UHE-$genie_version.xml";
-
 $nkots     = 100;
 $emax      = 500;
 $neutrinos = "12,-12,14,-14";

@@ -6,14 +6,13 @@
 \brief   A utility class to facilitate creating the GENIE MC Ntuple from the
          output GENIE GHEP event records.
 
-\author  Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-         University of Liverpool & STFC Rutherford Appleton Lab
+\author  Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+ University of Liverpool & STFC Rutherford Appleton Laboratory
 
 \created October 1, 2004
 
-\cpright  Copyright (c) 2003-2019, The GENIE Collaboration
+\cpright  Copyright (c) 2003-2022, The GENIE Collaboration
           For the full text of the license visit http://copyright.genie-mc.org
-          or see $GENIE/LICENSE
 */
 //____________________________________________________________________________
 
@@ -40,7 +39,7 @@ class NtpMCTreeHeader;
 class NtpWriter {
 
 public :
-  NtpWriter(NtpMCFormat_t fmt = kNFGHEP, Long_t runnu = 0);
+  NtpWriter(NtpMCFormat_t fmt = kNFGHEP, Long_t runnu = 0, Long_t runseed = -1);
  ~NtpWriter();
 
   ///< initialize the ntuple writer
@@ -71,6 +70,7 @@ private:
 
   NtpMCFormat_t      fNtpFormat;          ///< enumeration of event formats
   Long_t             fRunNu;              ///< run nu
+  Long_t             fRunSeed;            ///< run seed
   string             fOutFilename;        ///< output filename
   TFile *            fOutFile;            ///< output file
   TTree *            fOutTree;            ///< output tree

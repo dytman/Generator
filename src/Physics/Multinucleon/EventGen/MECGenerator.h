@@ -5,17 +5,16 @@
 
 \brief    Simulate the primary MEC interaction
 
-\author   Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-          University of Liverpool & STFC Rutherford Appleton Lab
+\author   Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+          University of Liverpool & STFC Rutherford Appleton Laboratory
 
           Steve Dytman <dytman+ \at pitt.edu>
           Pittsburgh University
 
 \created  Sep. 22, 2008
 
-\cpright  Copyright (c) 2003-2019, The GENIE Collaboration
+\cpright  Copyright (c) 2003-2022, The GENIE Collaboration
           For the full text of the license visit http://copyright.genie-mc.org
-          or see $GENIE/LICENSE
 */
 //____________________________________________________________________________
 
@@ -23,14 +22,16 @@
 #define _MEC_GENERATOR_H_
 
 #include <TGenPhaseSpace.h>
+#include "Framework/Utils/Range1.h"
 
 #include "Framework/EventGen/EventRecordVisitorI.h"
 #include "Framework/ParticleData/PDGCodeList.h"
 
 namespace genie {
 
-class XSecAlgorithmI;
+class Interaction;
 class NuclearModelI;
+class XSecAlgorithmI;
 
 class MECGenerator : public EventRecordVisitorI {
 
@@ -58,14 +59,29 @@ private:
   void    RecoilNucleonCluster              (GHepRecord * event) const;
   void    DecayNucleonCluster               (GHepRecord * event) const;
   void    SelectNSVLeptonKinematics         (GHepRecord * event) const;
+  void    SelectSuSALeptonKinematics        (GHepRecord * event) const;
   void    GenerateNSVInitialHadrons         (GHepRecord * event) const;
   PDGCodeList NucleonClusterConstituents    (int pdgc)           const;
-  
+
+  // Helper function that computes the maximum differential cross section
+  // in the kPSTlctl phase space
+  double GetXSecMaxTlctl( const Interaction & inter, const Range1D_t & Tl_range, const Range1D_t & ctl_range ) const;
+
   mutable const XSecAlgorithmI * fXSecModel;
   mutable TGenPhaseSpace         fPhaseSpaceGenerator;
   const NuclearModelI *          fNuclModel;
 
+  double fSafetyFactor ; 
+  int fFunctionCalls ; 
+  double fRelTolerance ; // Relative tolerance 
+  int fMinScanPointsTmu ; 
+  int fMinScanPointsCosth ; 
+  
   double fQ3Max;
+
+  // Tolerate this maximum percent deviation above the calculated maximum cross
+  // section when sampling lepton kinematics for the SuSAv2-MEC model.
+  double fSuSAMaxXSecDiffTolerance;
 };
 
 }      // genie namespace

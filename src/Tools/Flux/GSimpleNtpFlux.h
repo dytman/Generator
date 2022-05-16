@@ -10,9 +10,8 @@
 
 \created  Jan 25, 2010
 
-\cpright  Copyright (c) 2003-2019, The GENIE Collaboration
+\cpright  Copyright (c) 2003-2022, The GENIE Collaboration
           For the full text of the license visit http://copyright.genie-mc.org
-          or see $GENIE/LICENSE
 */
 //____________________________________________________________________________
 
@@ -44,7 +43,7 @@ using std::ostream;
 namespace genie {
 namespace flux  {
 
-class GSimpleNtpEntry;    
+class GSimpleNtpEntry;
 ostream & operator << (ostream & stream, const GSimpleNtpEntry & info);
 
 /// Small persistable C-struct -like classes that makes up the SimpleNtpFlux
@@ -66,23 +65,24 @@ ostream & operator << (ostream & stream, const GSimpleNtpEntry & info);
     void Reset();
     void Print(const Option_t* opt = "") const;
     friend ostream & operator << (ostream & stream, const GSimpleNtpEntry & info);
-    
+
     Double_t   wgt;      ///< nu weight
-    
-    Double_t   vtxx;     ///< x position in lab frame
+
+    Double_t   vtxx;     ///< x position in lab frame (meters)
     Double_t   vtxy;     ///< y position in lab frame
     Double_t   vtxz;     ///< z position in lab frame
+    Double_t   vtxt;     ///< time of ray start (seconds)
     Double_t   dist;     ///< distance from hadron decay
-    
-    Double_t   px;       ///< x momentum in lab frame
+
+    Double_t   px;       ///< x momentum in lab frame (GeV)
     Double_t   py;       ///< y momentum in lab frame
     Double_t   pz;       ///< z momentum in lab frame
     Double_t   E;        ///< energy in lab frame
-    
+
     Int_t      pdg;      ///< nu pdg-code
     UInt_t     metakey;  ///< key to meta data
 
-    ClassDef(GSimpleNtpEntry,1)
+    ClassDef(GSimpleNtpEntry,2)
   };
 
 
@@ -117,11 +117,11 @@ ostream & operator << (ostream & stream, const GSimpleNtpEntry & info);
     Int_t      ptype;    ///< parent type (PDG)
     Int_t      ppmedium; ///< tracking medium where parent was produced
     Int_t      tptype;   ///< parent particle type at target exit
-    
-    Int_t      run;      ///< 
+
+    Int_t      run;      ///<
     Int_t      evtno;    ///<
     Int_t      entryno;  ///<
-    
+
     ClassDef(GSimpleNtpNuMI,3)
   };
 
@@ -142,7 +142,7 @@ ostream & operator << (ostream & stream, const GSimpleNtpEntry & info);
 
    std::vector<Int_t>    auxint;  ///< additional ints associated w/ entry
    std::vector<Double_t> auxdbl;  ///< additional doubles associated w/ entry
-  
+
    ClassDef(GSimpleNtpAux,1)
   };
 
@@ -152,7 +152,7 @@ ostream & operator << (ostream & stream, const GSimpleNtpEntry & info);
 
 /// GSimpleNtpMeta
 /// =========================
-/// A small persistable C-struct -like class that holds metadata 
+/// A small persistable C-struct -like class that holds metadata
 /// about the the SimpleNtpFlux ntple.
 ///
   class GSimpleNtpMeta: public TObject {
@@ -167,9 +167,9 @@ ostream & operator << (ostream & stream, const GSimpleNtpEntry & info);
     void AddFlavor(Int_t nupdg);
     void Print(const Option_t* opt = "") const;
     friend ostream & operator << (ostream & stream, const GSimpleNtpMeta & info);
-    
+
     std::vector<Int_t>  pdglist; ///< list of neutrino flavors
-   
+
     Double_t maxEnergy;   ///< maximum energy
     Double_t minWgt;      ///< minimum weight
     Double_t maxWgt;      ///< maximum weight
@@ -178,11 +178,11 @@ ostream & operator << (ostream & stream, const GSimpleNtpEntry & info);
     Double_t windowBase[3]; ///< x,y,z position of window base point
     Double_t windowDir1[3]; ///< dx,dy,dz of window direction 1
     Double_t windowDir2[3]; ///< dx,dy,dz of window direction 2
-    
+
     std::vector<std::string>    auxintname;  ///< tagname of aux ints associated w/ entry
     std::vector<std::string>    auxdblname;  ///< tagname of aux doubles associated w/ entry
     std::vector<std::string>    infiles; ///< list of input files
-    
+
     Int_t    seed;     ///< random seed used in generation
     UInt_t   metakey;  ///< index key to tie to individual entries
 
@@ -196,10 +196,10 @@ ostream & operator << (ostream & stream, const GSimpleNtpEntry & info);
 /// ==========
 /// An implementation of the GFluxI interface that provides NuMI flux
 ///
-class GSimpleNtpFlux 
+class GSimpleNtpFlux
   : public genie::GFluxI
   , public genie::flux::GFluxExposureI
-  , public genie::flux::GFluxFileConfigI 
+  , public genie::flux::GFluxFileConfigI
 {
 
 public :
@@ -222,9 +222,9 @@ public :
   void                   GenerateWeighted (bool gen_weighted);
 
   // Methods specific to the NuMI flux driver,
-  // for configuration/initialization of the flux & event generation drivers 
+  // for configuration/initialization of the flux & event generation drivers
   // and and for passing-through flux information (e.g. neutrino parent decay
-  // kinematics) not used by the generator but required by analyses/processing 
+  // kinematics) not used by the generator but required by analyses/processing
   // further downstream
 
   //
@@ -241,10 +241,13 @@ public :
 
   // allow access to main tree so we can call Branch() to retrieve extra stuff
   TChain*
-    GetFluxTChain(void) { return fNuFluxTree; } ///< 
+    GetFluxTChain(void) { return fNuFluxTree; } ///<
 
   double    GetDecayDist() const; ///< dist (user units) from dk to current pos
   void      MoveToZ0(double z0);  ///< move ray origin to user coord Z0
+
+  void      SetIncludeVtxt(bool it=true); ///< should X4 include CurEntry.vtxt
+  bool      GetIncludeVtxt() { return fIncludeVtxt; }
 
   //
   // information about the current state
@@ -262,7 +265,7 @@ public :
 
   std::vector<std::string> GetFileList();  ///< list of files currently part of chain
 
-  // 
+  //
   // GFluxFileConfigI interface
   //
   virtual void  LoadBeamSimData(const std::vector<string>& filenames,
@@ -287,7 +290,7 @@ public :
 
   void      ProcessMeta(void);  ///< scan for max flux energy, weight
 
-  void      GetFluxWindow(TVector3& p1, TVector3& p2, TVector3& p3) const; ///< 3 points define a plane in beam coordinate 
+  void      GetFluxWindow(TVector3& p1, TVector3& p2, TVector3& p3) const; ///< 3 points define a plane in beam coordinate
 
 private:
 
@@ -325,7 +328,6 @@ private:
 
   long int  fNUse;                ///< how often to use same entry in a row
   long int  fIUse;                ///< current # of times an entry has been used
-
   double    fSumWeight;           ///< sum of weights for nus thrown so far
   long int  fNNeutrinos;          ///< number of flux neutrinos thrown so far
   long int  fNEntriesUsed;        ///< number of entries read from files
@@ -342,11 +344,13 @@ private:
   GSimpleNtpAux*   fCurAux;    ///< current "aux" branch extra info
   TLorentzVector   fP4;        ///< reconstituted p4 vector
   TLorentzVector   fX4;        ///< reconstituted position vector
-  GSimpleNtpMeta*  fCurMeta;   ///< current meta data 
+  GSimpleNtpMeta*  fCurMeta;   ///< current meta data
 
   GSimpleNtpEntry* fCurEntryCopy;  ///< current entry
   GSimpleNtpNuMI*  fCurNuMICopy;   ///< current "numi" branch extra info
   GSimpleNtpAux*   fCurAuxCopy;    ///< current "aux" branch extra info
+
+  bool             fIncludeVtxt;   ///< does fX4 include CurEntry.vtxt or 0
 
 };
 

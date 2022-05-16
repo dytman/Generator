@@ -5,14 +5,13 @@
 
 \brief    Some common run-time GENIE options.
 
-\author   Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-          University of Liverpool & STFC Rutherford Appleton Lab
+\author   Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+          University of Liverpool & STFC Rutherford Appleton Laboratory
 
 \created  January 29, 2013
 
-\cpright  Copyright (c) 2003-2019, The GENIE Collaboration
-          For the full text of the license visit http://copyright.genie-mc.org
-          or see $GENIE/LICENSE
+\cpright  Copyright (c) 2003-2022, The GENIE Collaboration
+          For the full text of the license visit http://copyright.genie-mc.org          
 */
 //____________________________________________________________________________
 
@@ -40,6 +39,8 @@ public:
 
   // Read options from the command line. Call from all GENIE command-line apps.
   void ReadFromCommandLine(int argc, char ** argv);
+  // Centralized printout of what ReadFromCommandLine() will look for
+  static std::string RunOptSyntaxString(bool include_generator_specific);
 
   // Get options set.
   TuneId * Tune                 (void) const { return fTune;                   }

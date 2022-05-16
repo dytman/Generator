@@ -7,19 +7,21 @@
             factored out from existing apps for convenience.
             Not generic GENIE initialization code.
 
-\author     Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-            University of Liverpool & STFC Rutherford Appleton Lab
+\author     Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+            University of Liverpool & STFC Rutherford Appleton Laboratory
 
 \created    January 31, 2013
 
-\cpright    Copyright (c) 2003-2019, The GENIE Collaboration
-            For the full text of the license visit http://copyright.genie-mc.org
-            or see $GENIE/LICENSE
+\cpright    Copyright (c) 2003-2022, The GENIE Collaboration
+            For the full text of the license visit http://copyright.genie-mc.org          
 */
 //____________________________________________________________________________
 
 #ifndef _APP_INIT_UTILS_H_
 #define _APP_INIT_UTILS_H_
+
+#include <string>
+using std::string;
 
 namespace genie {
 namespace utils {

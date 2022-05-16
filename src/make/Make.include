@@ -1,7 +1,7 @@
 #
 # Make.include for GENIE Object-Oriented Neutrino Generator
 #
-# Costas Andreopoulos (Rutherford Lab.) <costas.andreopoulos \at stfc.ac.uk>
+# Costas Andreopoulos (Rutherford Lab.) <constantinos.andreopoulos \at cern.ch>
 #
 
 #-------------------------------------------------------------------
@@ -154,6 +154,84 @@ LHAPDF_LIBRARIES += -L$(GOPT_WITH_LHAPDF5_LIB) -lLHAPDF $(FORT_LIBRARIES)
 endif
 
 #-------------------------------------------------------------------
+#                             APFEL
+#-------------------------------------------------------------------
+
+APFEL_LIBRARIES = 
+APFEL_INCLUDES  =
+
+ifeq ($(strip $(GOPT_ENABLE_APFEL)),YES) 
+
+APFEL_INCLUDES  = -I$(GOPT_WITH_APFEL_INC)
+APFEL_LIBRARIES = -L$(GOPT_WITH_APFEL_LIB) -lAPFEL 
+
+endif
+
+#-------------------------------------------------------------------
+#                             INCL
+#-------------------------------------------------------------------
+
+INCL_LIBRARIES =
+INCL_INCLUDES  =
+
+ifeq ($(strip $(GOPT_ENABLE_INCL)),YES)
+
+INCL_INCLUDES  = -I$(GOPT_WITH_INCL_INC) -I$(GOPT_WITH_BOOST_INC)
+INCL_FLAGS     = $(shell $(GOPT_WITH_INCL_LIB)/../bin/inclxx-config --dflags )
+INCL_LIBRARIES = -L$(GOPT_WITH_INCL_LIB)  $(shell $(GOPT_WITH_INCL_LIB)/../bin/inclxx-config --libs )
+
+BOOST_LIBRARIES = -L$(GOPT_WITH_BOOST_LIB) -lboost_program_options -lboost_timer -lboost_system -lboost_date_time
+INCL_LIBRARIES := $(BOOST_LIBRARIES) $(FORT_LIBRARIES) $(INCL_LIBRARIES)
+
+endif
+
+#-------------------------------------------------------------------
+#                             geant4
+#-------------------------------------------------------------------
+
+GEANT4_FLAGS     =
+GEANT4_INCLUDES   =
+GEANT4_LIBRARIES =
+
+ifeq ($(strip $(GOPT_ENABLE_GEANT4_INTERFACE)),YES)
+
+# -cflags is a mixture of compiler flags and includes
+GEANT4_CFLAGS = $(shell $(GOPT_WITH_GEANT4_LIB)/../bin/geant4-config --cflags )
+
+GEANT4_FLAGS   = $(filter-out -I%,$(GEANT4_CFLAGS))
+G4_IFLAGS_ONLY = $(filter     -I%,$(GEANT4_CFLAGS))
+
+#$(info --------- GEANT4 flags and include path handling ---------)
+#$(info )
+#$(info GEANT4_FLAGS=$(GEANT4_FLAGS))
+#$(info )
+#$(info G4_IFLAGS_ONLY=$(G4_IFLAGS_ONLY))
+#$(info )
+
+# this might be -I/path/include/ or -I/path/include/Geant
+# really want the first
+#GEANT4_INCLUDES += -DG4_INC_START $(G4_IFLAGS_ONLY) -DG4_INC_END
+GEANT4_INCLUDES += $(G4_IFLAGS_ONLY)
+
+G4INCBASE = $(strip $(filter -I%include/Geant4,$(G4_IFLAGS_ONLY)))
+#$(info G4INCBASE="$(G4INCBASE)")
+#$(info )
+ifneq ($(G4INCBASE),"")
+  #$(info G4INCBASE was non-blank)
+  # strip out specification of Geant4
+  ALTG4INC := $(subst include/Geant4,include,$(G4INCBASE))
+  #$(info ALTG4INC=$(ALTG4INC))
+  #$(info )
+  #GEANT4_INCLUDES +=  -DG4_INC_ALT_START $(ALTG4INC) -DG4_INC_ALT_END
+  GEANT4_INCLUDES += $(ALTG4INC)
+  #$(info GEANT4_INCLUDES=$(GEANT4_INCLUDES))
+  #$(info )
+ endif
+
+GEANT4_LIBRARIES := $(shell $(GOPT_WITH_GEANT4_LIB)/../bin/geant4-config --libs-without-gui )
+endif
+
+#-------------------------------------------------------------------
 # PYTHIA6
 #-------------------------------------------------------------------
 
@@ -258,7 +336,7 @@ USING_CLANG  = YES
 endif
 
 # get gcc version & split in '.' delimited tokens (major/minor/revison num.)
-CXXVRS      = $(shell $(CXX) -dumpversion)
+CXXVRS      = $(shell $(CXX) -dumpfullversion -dumpversion)
 CXXVRS_MAJ  = $(shell awk 'BEGIN {\
 		str="$(CXXVRS)"; split(str, tk, "."); print tk[1]}')
 CXXVRS_MIN  = $(shell awk 'BEGIN {\
@@ -274,6 +352,10 @@ endif
 GCC_GE_4_1_0  = $(shell awk 'BEGIN {\
 		if($(CXXVRS_MAJ)>=4 && $(CXXVRS_MIN)>0) print "YES"}')
 
+# gcc version >= 8.0.0 ?
+GCC_GE_8_0_0  = $(shell awk 'BEGIN {\
+		if($(CXXVRS_MAJ)>=8 && $(CXXVRS_MIN)>0) print "YES"}')
+
 
 # MAC OS X with gcc or clang, 32-bit mode
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -282,9 +364,9 @@ ARCH_OK       = YES
 IS_MACOSX     = YES
 CXXFLAGS      = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
 		$(ROOT_FLAGS) \
-		$(OPT_WITH_CXX_DEBUG_FLAG) \
-		$(OPT_WITH_CXX_OPTIMIZ_FLAG) \
-		$(OPT_WITH_CXX_USERDEF_FLAGS)
+		$(GOPT_WITH_CXX_DEBUG_FLAG) \
+		$(GOPT_WITH_CXX_OPTIMIZ_FLAG) \
+		$(GOPT_WITH_CXX_USERDEF_FLAGS)
 ifeq ($(strip $(GCC_GE_4_1_0)), YES)
   CXXFLAGS += -Wno-strict-aliasing
 endif
@@ -306,35 +388,6 @@ OutPutOpt     = -o
 SOMINF        =
 EXTRALIBS     =
 endif
-
-
-#ifeq ($(strip $(ARCH)),macosx)
-#ARCH_OK       = YES
-#IS_MACOSX     = YES
-#CXXFLAGS      = -pipe -W -Wall -Wno-long-double \
-#		-fsigned-char -fno-common -flat_namespace \#
-#		$(GOPT_WITH_CXX_DEBUG_FLAG) \
-#		$(GOPT_WITH_CXX_OPTIMIZ_FLAG) \
-#		$(GOPT_WITH_CXX_USERDEF_FLAGS)
-#ifeq ($(strip $(GCC_GE_4_1_0)), YES)
-#  CXXFLAGS += -Wno-strict-aliasing -ffriend-injection
-#endif
-#LDFLAGS       = -bind_at_load
-#SOFLAGS       = -dynamiclib -flat_namespace \
-#		-single_module -undefined dynamic_lookup
-#DllSuf       := dylib
-#DllLinkSuf   := so
-#StaticLibSuf := a
-#ObjSuf       := o
-#SrcSuf       := cxx
-#FORT         := g77
-#FORTOPTS     := $(FFLAGS) -g -c -O -DLINUX $(F77INCS) -fno-second-underscore
-#RANLIB       := ranlib
-#SOCMD         = $(LD)
-#OutPutOpt     = -o
-#SOMINF        =
-#EXTRALIBS     =
-#endif
 
 # MAC OS X with gcc or clang, 64-bit mode
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -358,9 +411,9 @@ IS_MACOSX     = YES
 CXXFLAGS      = -m64 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common \
                 $(ROOT_FLAGS) \
-                $(OPT_WITH_CXX_DEBUG_FLAG) \
-                $(OPT_WITH_CXX_OPTIMIZ_FLAG) \
-                $(OPT_WITH_CXX_USERDEF_FLAGS)
+                $(GOPT_WITH_CXX_DEBUG_FLAG) \
+                $(GOPT_WITH_CXX_OPTIMIZ_FLAG) \
+                $(GOPT_WITH_CXX_USERDEF_FLAGS)
 ifneq ($(strip $(GCC_GE_4_2_1)), YES)
   ifneq ($(USING_CLANG), YES)
     CXXFLAGS   += -flat_namespace
@@ -395,33 +448,6 @@ SOMINF        =
 EXTRALIBS     =
 endif
 
-#ifeq ($(strip $(ARCH)),macosx64)
-#ARCH_OK       = YES
-#IS_MACOSX     = YES
-#CXXFLAGS      = -m64 -pipe -W -Wall \
-#		-fsigned-char -fno-common -flat_namespace \
-#		$(GOPT_WITH_CXX_DEBUG_FLAG) \
-#		$(GOPT_WITH_CXX_OPTIMIZ_FLAG) \
-#		$(GOPT_WITH_CXX_USERDEF_FLAGS)
-#ifeq ($(strip $(GCC_GE_4_1_0)), YES)
-#  CXXFLAGS += -Wno-strict-aliasing -ffriend-injection
-#endif
-#LDFLAGS       = -bind_at_load
-#SOFLAGS       = -dynamiclib -flat_namespace \
-#		-single_module -undefined dynamic_lookup
-#DllSuf       := dylib
-#DllLinkSuf   := so
-#StaticLibSuf := a
-#ObjSuf       := o
-#SrcSuf       := cxx
-#FORT         := g77
-#FORTOPTS     := $(FFLAGS) -g -c -O -DLINUX $(F77INCS) -fno-second-underscore
-#RANLIB       := ranlib
-#SOCMD         = $(LD)
-#OutPutOpt     = -o
-#SOMINF        =
-#EXTRALIBS     =
-#endif
 
 # LINUX / 32-bit x86 / with gcc
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -432,8 +458,13 @@ CXXFLAGS      = -W -Wall -fPIC -Wshadow \
 		$(GOPT_WITH_CXX_DEBUG_FLAG) \
 		$(GOPT_WITH_CXX_OPTIMIZ_FLAG) \
 		$(GOPT_WITH_CXX_USERDEF_FLAGS)
-ifeq ($(strip $(GCC_GE_4_1_0)), YES)
-  CXXFLAGS += -Wno-strict-aliasing -ffriend-injection
+ifeq ($(strip $(GCC_GE_8_0_0)), YES)
+  # -ffriend-injection is deprecated, soon to go away
+  CXXFLAGS += -Wno-strict-aliasing
+else
+  ifeq ($(strip $(GCC_GE_4_1_0)), YES)
+    CXXFLAGS += -Wno-strict-aliasing -ffriend-injection
+  endif
 endif
 LDFLAGS       = -g -Wl,--no-as-needed -Wl,--no-undefined
 SOFLAGS       = -shared
@@ -460,8 +491,46 @@ CXXFLAGS      = -W -Wall -fPIC -Wshadow \
 		$(GOPT_WITH_CXX_DEBUG_FLAG) \
 		$(GOPT_WITH_CXX_OPTIMIZ_FLAG) \
 		$(GOPT_WITH_CXX_USERDEF_FLAGS)
-ifeq ($(strip $(GCC_GE_4_1_0)), YES)
-  CXXFLAGS += -Wno-strict-aliasing -ffriend-injection
+ifeq ($(strip $(GCC_GE_8_0_0)), YES)
+  # -ffriend-injection is deprecated, soon to go away
+  CXXFLAGS += -Wno-strict-aliasing
+else
+  ifeq ($(strip $(GCC_GE_4_1_0)), YES)
+    CXXFLAGS += -Wno-strict-aliasing -ffriend-injection
+  endif
+endif
+LDFLAGS       = -g -Wl,--no-as-needed -Wl,--no-undefined
+SOFLAGS       = -shared
+DllSuf       := so
+DllLinkSuf   :=
+StaticLibSuf := a
+ObjSuf       := o
+SrcSuf       := cxx
+FORT         := g77
+FORTOPTS     := $(FFLAGS) -g -c -O -DLINUX $(F77INCS) -fno-second-underscore
+RANLIB       := ranlib
+SOCMD         = $(LD)
+OutPutOpt     = -o
+SOMINF        =
+EXTRALIBS     = -lnsl
+endif
+
+# LINUX / 64-bit arm / linuxarm64
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ifeq ($(strip $(ARCH)),linuxarm64) 
+ARCH_OK       = YES
+CXXFLAGS      = -W -Wall -fPIC -Wshadow \
+    $(ROOT_FLAGS) \
+    $(GOPT_WITH_CXX_DEBUG_FLAG) \
+    $(GOPT_WITH_CXX_OPTIMIZ_FLAG) \
+    $(GOPT_WITH_CXX_USERDEF_FLAGS)
+ifeq ($(strip $(GCC_GE_8_0_0)), YES)
+  # -ffriend-injection is deprecated, soon to go away
+  CXXFLAGS += -Wno-strict-aliasing
+else
+  ifeq ($(strip $(GCC_GE_4_1_0)), YES)
+    CXXFLAGS += -Wno-strict-aliasing -ffriend-injection
+  endif
 endif
 LDFLAGS       = -g -Wl,--no-as-needed -Wl,--no-undefined
 SOFLAGS       = -shared
@@ -491,6 +560,7 @@ CPP_INCLUDES := \
     $(LOG_INCLUDES) \
     $(ROOT_INCLUDES) \
     $(LHAPDF_INCLUDES) \
+    $(APFEL_INCLUDES) \
     $(GSL_INCLUDES) \
     $(GENIE_INCLUDES)
 
@@ -506,6 +576,7 @@ LIBRARIES := $(SYSLIBS) \
              $(ROOT_LIBRARIES) \
              $(PYTHIA6_LIBRARIES) \
              $(LHAPDF_LIBRARIES) \
+             $(APFEL_LIBRARIES) \
              $(XML_LIBRARIES) \
              $(LOG_LIBRARIES) \
              $(GSL_LIBRARIES) \

@@ -1,11 +1,10 @@
 //____________________________________________________________________________
 /*
- Copyright (c) 2003-2019, The GENIE Collaboration
+ Copyright (c) 2003-2022, The GENIE Collaboration
  For the full text of the license visit http://copyright.genie-mc.org
- or see $GENIE/LICENSE
 
- Author: Costas Andreopoulos <costas.andreopoulos \at stfc.ac.uk>
-         University of Liverpool & STFC Rutherford Appleton Lab
+ Costas Andreopoulos <constantinos.andreopoulos \at cern.ch>
+ University of Liverpool & STFC Rutherford Appleton Laboratory
 */
 //____________________________________________________________________________
 
@@ -195,6 +194,13 @@ void XSecSplineList::CreateSpline(const XSecAlgorithmI * alg,
   double Ethr = interaction->PhaseSpace().Threshold();
   SLOG("XSecSplLst", pNOTICE)
     << "Energy threshold for current interaction = " << Ethr << " GeV";
+
+  if (Ethr>e_max) {
+    SLOG("XSecSplLst", pFATAL) << "Energy threshold higher than maximum.";
+    SLOG("XSecSplLst", pFATAL) << "Energy threshold = " << Ethr << " GeV";
+    SLOG("XSecSplLst", pFATAL) << "Energy maximum = " << e_max << " GeV";
+    return;
+  }
 
   int nkb = (Ethr>e_min) ? 5 : 0; // number of knots <  threshold
   int nka = nknots-nkb;           // number of knots >= threshold
@@ -567,9 +573,9 @@ void XSecSplineList::Print(ostream & stream) const
   stream << "\n [-] Options:";
   stream << "\n  |";
   stream << "\n  |-----o  UseLogE..................." << fUseLogE;
-  stream << "\n  |-----o  Spline Emin..............." << fNKnots;
-  stream << "\n  |-----o  Spline Emax..............." << fEmin;
-  stream << "\n  |-----o  Spline NKnots............." << fEmax;
+  stream << "\n  |-----o  Spline Emin..............." << fEmin;
+  stream << "\n  |-----o  Spline Emax..............." << fEmax;
+  stream << "\n  |-----o  Spline NKnots............." << fNKnots;
   stream << "\n  |";
 
   map<string, map<string, Spline *> >::const_iterator mm_iter;

@@ -5,7 +5,7 @@
 
 \brief    Computes the Valencia MEC model differential cross section.
           Uses precomputed hadon tensor tables.
-          Is a concrete implementation of the XSecAlgorithmI interface. 
+          Is a concrete implementation of the XSecAlgorithmI interface.
 
 \author   Code contributed by J. Schwehr, D. Cherdack, R. Gran and described
           in arXiv:1601.02038 and some of the refereces there-in,
@@ -13,26 +13,26 @@
 
           Substantial code refactorizations by the core GENIE group.
 
+          Refactored in 2018 by S. Gardiner to use the new hadron tensor
+          framework
+
 \ref      J. Nieves, I. Ruiz Simo, M.J. Vicente Vacas,
           Inclusive quasi-elastic neutrino reactions, PRC 83 (2011) 045501
 
 \created  Mar 22, 2016
 
-\cpright  Copyright (c) 2003-2019, The GENIE Collaboration
+\cpright  Copyright (c) 2003-2022, The GENIE Collaboration
           For the full text of the license visit http://copyright.genie-mc.org
-          or see $GENIE/LICENSE
 */
 //____________________________________________________________________________
 
 #ifndef _NIEVES_SIMO_VACAS_MEC_PXSEC_2016_H_
 #define _NIEVES_SIMO_VACAS_MEC_PXSEC_2016_H_
 
-#include <vector>
-
 #include "Framework/EventGen/XSecAlgorithmI.h"
-#include "Physics/Multinucleon/XSection/MECHadronTensor.h"
-
-using std::vector;
+#include "Physics/HadronTensors/HadronTensorModelI.h"
+#include "Physics/Common/XSecScaleI.h"
+#include "Physics/Common/QvalueShifter.h"
 
 namespace genie {
 
@@ -60,12 +60,15 @@ private:
   // Load algorithm configuration
   void LoadConfig (void);
 
-  double                   fXSecScale;        ///< external xsec scaling factor
+  double fXSecScale; ///< external xsec scaling factor
+
+  const HadronTensorModelI* fHadronTensorModel;
 
   const XSecIntegratorI *  fXSecIntegrator; // Numerical integrator (GSL)
 
-//double fQ3Max;
+  const XSecScaleI * fMECScaleAlg ; // Optional algorithm to scale the xsec as a function of W
+  const QvalueShifter * fQvalueShifter ; // Optional algorithm to retrieve the qvalue shift for a given target
 };
-  
+
 }       // genie namespace
 #endif  // _NIEVES_SIMO_VACAS_MEC_PXSEC_2016_H_
