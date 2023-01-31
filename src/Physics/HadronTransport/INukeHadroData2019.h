@@ -52,7 +52,7 @@ namespace genie {
 
   class Spline;
 
-  class INukeHadroData2019 : genie::Algorithm  {
+  class INukeHadroData2019 : public genie::Algorithm  {
 
   public:
  

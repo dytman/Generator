@@ -960,7 +960,7 @@ void HAIntranuke2018::Inelastic(
 
           // adjust p to reflect scattering
           // get random scattering angle
-          double C3CM = fHadroData2018->IntBounce(p,t1code,scode,fate_hN);
+          C3CM = fHadroData2019->IntBounce(p,t1code,scode,fate_hN);
           if (C3CM<-1.)
             {
               LOG("HAIntranuke2018", pWARN) << "Inelastic() failed: IntBounce returned bad angle - try again";
