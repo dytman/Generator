@@ -984,9 +984,6 @@ void HNIntranuke2018::LoadConfig(void)
   //  fHadroData2018 = INukeHadroData2018::Instance();
   fHadroData2019 = dynamic_cast<const genie::INukeHadroData2019 *>( this -> SubAlg("INukeDataset") ) ; 
 
-  std::cout << "THE POINTER " << fHadroData2019 << std::endl ;
-  std::cout << "THE MOHTER " << this -> SubAlg("INukeDataset")->Id() << std::endl ;
-
   // fermi momentum setup
   // this is specifically set in Intranuke2018::Configure(string)
   fNuclmodel = dynamic_cast<const NuclearModelI *>( this -> SubAlg("NuclearModel") ) ;
